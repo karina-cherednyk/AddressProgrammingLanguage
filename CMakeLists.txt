@@ -3,4 +3,4 @@ project(AddressProgrammingLanguage)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(AddressProgrammingLanguage main.cpp sources/scanner.cpp headers/scanner.h)
+add_executable(AddressProgrammingLanguage main.cpp sources/scanner.cpp headers/scanner.h sources/compiler.cpp headers/compiler.h sources/chunk.cpp headers/chunk.h)

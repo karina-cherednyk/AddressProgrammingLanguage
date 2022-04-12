@@ -2,6 +2,13 @@
 #include "cstring"
 #include "assert.h"
 
+
+Scanner::Scanner(const char* source){
+    start = source;
+    current = source;
+    line = 1;
+}
+
 bool Scanner::isAtEnd(){
     *current == '\0';
 }
@@ -78,8 +85,20 @@ Token Scanner::number(){
     return makeToken(TokenType::NUMBER);
 };
 
+TokenType Scanner::checkKeyword(const char* with, TokenType type){
+    size_t length = strlen(with);
+    if( (size_t)(this->current - this->start) == length && memcmp(this->start , with, length) == 0)
+        return type;
+    else return TokenType::IDENTIFIER;
+}
 TokenType Scanner::identifierType(){
     //TODO: check for keywords.
+    switch (*start) {
+        case 't':
+            return checkKeyword("true", TokenType::TRUE);
+        case 'f':
+            return checkKeyword("false", TokenType::FALSE);
+    }
     return TokenType::IDENTIFIER;
 }
 
@@ -103,6 +122,8 @@ Token Scanner::scanToken() {
         case '*': return makeToken(TokenType::STAR);
         case '/': return makeToken(TokenType::SLASH);
         case '\'': return makeToken(TokenType::SINGLE_QUOTE);
+        case '(': return makeToken(TokenType::LEFT_PAREN);
+        case ')': return makeToken(TokenType::RIGHT_PAREN);
         case '!': return makeToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG);
 
         case '<': return makeToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
