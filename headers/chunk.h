@@ -38,6 +38,7 @@ struct Value {
     inline explicit Value(double value):type(ValueType::NUMBER), as({.number = value}){};
     inline explicit Value(bool value):type(ValueType::BOOL), as({.boolean = value}){};
     inline explicit Value(Value* value):type(ValueType::POINTER), as({.pointer = value}){};
+    inline Value():type(ValueType::BOOL), as({.boolean = false}){};
 
     bool operator== (const Value& other) const;
     void printValue();

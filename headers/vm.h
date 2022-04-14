@@ -28,16 +28,16 @@ class Vm {
     Value pop();
     Value peek(size_t distance);
 
-    void initVM();
-    void freeVM();
+
 
     static bool isFalsey(Value value);
 
 public:
     InterpretResult interpret(const char* source);
+    void initVM();
+    void freeVM();
 
-
-
+    Vm();
 };
 
 

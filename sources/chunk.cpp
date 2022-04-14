@@ -31,4 +31,5 @@ bool Value::operator==(const Value &other) const {
         case ValueType::POINTER: return as.pointer == other.as.pointer;
         case ValueType::NUMBER: return as.number == other.as.number;
     }
+    return false;
 }

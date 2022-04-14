@@ -117,6 +117,10 @@ bool Vm::isFalsey(Value value) {
     return value.type == ValueType::NUMBER ? value.as.number == 0 : !value.as.boolean;
 }
 
+Vm::Vm() {
+
+}
+
 
 
 
