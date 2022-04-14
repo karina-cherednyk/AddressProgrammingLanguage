@@ -10,24 +10,6 @@
 class Compiler {
     Compiler();
 
-    struct Parser {
-        Token current;
-        Token previous;
-        bool hadError;
-        bool panicMode;
-    };
-
-
-
-    Parser parser;
-    void binary();
-    void grouping();
-    void unary();
-    void number();
-
-
-
-
     /*
      * expression -> assignment
      * assignment -> address_assignment | value_assignment
@@ -48,6 +30,46 @@ class Compiler {
         PREC_UNARY, PREC_PRIMARY
     };
 
+    struct Parser {
+        Token current;
+        Token previous;
+        bool hadError;
+        bool panicMode;
+        Scanner scanner;
+
+        void errorAtCurrent(const char *errMsg);
+        void errorAt(Token& token, const char *errMsg);
+        void advance();
+    };
+
+
+
+    Parser parser;
+    Chunk* chunk;
+
+    void writeByte(byte byte1);
+    void writeBytes(byte byte1, byte byte2);
+    void writeConstant(Value value);
+    void emitReturn();
+
+
+    void parsePrecedence(Precedence precedence);
+    void expression();
+    void consume(TokenType type, const char* errMsg);
+    void endCompiler();
+
+
+    void binary();
+    void grouping();
+    void unary();
+    void number();
+    void literal();
+
+
+
+
+
+
     typedef void (Compiler::*ParseFn)();
     struct ParseRule {
         ParseFn prefix;
@@ -56,6 +78,7 @@ class Compiler {
     };
     //ParseFn getParseRule(TokenType type);
     ParseRule rules[];
+    const ParseRule& getRule(TokenType type);
 
 
 public:

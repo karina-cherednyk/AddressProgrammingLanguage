@@ -12,10 +12,33 @@ enum OpCode {
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
-    OP_DIVIDE
+    OP_DIVIDE,
+    OP_NOT,
+    OP_LESS,
+    OP_EQUAL,
+    OP_GREATER
 };
+enum class ValueType {
+    BOOL,
+    NUMBER,
+    POINTER
+};
+
 typedef uint8_t byte;
-typedef double Value;
+
+struct Value {
+    ValueType type;
+    union {
+        bool boolean;
+        double number;
+        Value* pointer;
+    } as;
+    inline explicit Value(double value):type(ValueType::NUMBER), as({.number = value}){};
+    inline explicit Value(bool value):type(ValueType::BOOL), as({.boolean = value}){};
+    inline explicit Value(Value* value):type(ValueType::POINTER), as({.pointer = value}){};
+};
+
+//typedef double Value;
 
 struct Chunk {
     std::vector<byte> code;

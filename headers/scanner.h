@@ -1,5 +1,6 @@
 #ifndef SCANNER_H
 #define SCANNER_H
+#undef EOF
 
 enum class TokenType {
 // Single-character tokens.
@@ -47,7 +48,9 @@ class Scanner {
 
 
 public:
+    Scanner();
     Scanner(const char* source);
+    void init(const char* source);
     bool isAtEnd();
 
     Token errorToken(const char* message);

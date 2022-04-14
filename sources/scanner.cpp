@@ -3,11 +3,24 @@
 #include "assert.h"
 
 
+Scanner::Scanner(){
+    start = NULL;
+    current = NULL;
+    line = -1;
+}
+
 Scanner::Scanner(const char* source){
     start = source;
     current = source;
     line = 1;
 }
+
+void Scanner::init(const char* source){
+    start = source;
+    current = source;
+    line = 1;
+}
+
 
 bool Scanner::isAtEnd(){
     *current == '\0';
