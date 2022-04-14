@@ -37,7 +37,6 @@ public:
     void initVM();
     void freeVM();
 
-    Vm();
 };
 
 

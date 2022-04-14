@@ -50,7 +50,6 @@ class Scanner {
 
 public:
     Scanner();
-    Scanner(const char* source);
     void init(const char* source);
     bool isAtEnd();
 

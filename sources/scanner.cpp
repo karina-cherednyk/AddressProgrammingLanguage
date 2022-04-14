@@ -9,11 +9,7 @@ Scanner::Scanner(){
     line = -1;
 }
 
-Scanner::Scanner(const char* source){
-    start = source;
-    current = source;
-    line = 1;
-}
+
 
 void Scanner::init(const char* source){
     start = source;
@@ -23,7 +19,7 @@ void Scanner::init(const char* source){
 
 
 bool Scanner::isAtEnd(){
-    *current == '\0';
+    return *current == '\0';
 }
 Token Scanner::makeToken(TokenType type){
     Token t;
@@ -74,6 +70,8 @@ void Scanner::skipWhitespaces(){
             case '\t':
             case '\r':
                 advance(); break;
+            case '\n':
+                line++; advance(); break;
             default: return;
         }
     }
@@ -128,6 +126,7 @@ Token Scanner::scanToken() {
     if(isDigit(c)) return number();
     if(isAlpha(c)) return identifier();
     switch (c) {
+       // case '\n': line++; return makeToken(TokenType::SEMICOLON);
         case ';': return makeToken(TokenType::SEMICOLON);
         case ',': return makeToken(TokenType::COMMA);
         case '-': return makeToken(TokenType::MINUS);

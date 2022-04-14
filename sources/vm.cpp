@@ -62,6 +62,7 @@ InterpretResult Vm::run() {
         switch (*ip = readByte()) {
             case OP_RETURN:
                 pop().printValue();
+                printf("\n");
                 return InterpretResult::OK;
             case OP_CONSTANT: {
                 Value constant = chunk->constants[readByte()];
@@ -117,9 +118,6 @@ bool Vm::isFalsey(Value value) {
     return value.type == ValueType::NUMBER ? value.as.number == 0 : !value.as.boolean;
 }
 
-Vm::Vm() {
-
-}
 
 
 

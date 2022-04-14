@@ -78,7 +78,7 @@ void Compiler::parsePrecedence(Precedence precedence) {
     parser.advance(); // first token become parser.previous
     ParseFn prefixFn = getPrefixFn(parser.previous.type);
     if(prefixFn == NULL){
-        parser.errorAt(parser.previous, "Expect prefix fn or literal");
+        parser.errorAt(parser.previous, "Expect prefix operator or literal");
         return;
     }
     (this->*prefixFn)(); // stop on the next operator or at end
