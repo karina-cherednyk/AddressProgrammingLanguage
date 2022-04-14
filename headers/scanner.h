@@ -2,7 +2,7 @@
 #define SCANNER_H
 #undef EOF
 
-enum class TokenType {
+enum  class TokenType {
 // Single-character tokens.
     COMMA, SEMICOLON,
     MINUS, PLUS, SLASH, STAR, LEFT_PAREN, RIGHT_PAREN,
@@ -16,6 +16,7 @@ enum class TokenType {
 /*        TOKEN_AND, TOKEN_CLASS, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF,
         TOKEN_NIL, TOKEN_OR, TOKEN_PRINT, TOKEN_RETURN, TOKEN_SUPER, TOKEN_THIS, TOKEN_TRUE,
         TOKEN_VAR, TOKEN_WHILE, ERROR, TOKEN_EOF*/
+
 };
 
 struct Token {

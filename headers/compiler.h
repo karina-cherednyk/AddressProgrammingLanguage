@@ -6,9 +6,19 @@
 #include "chunk.h"
 
 
-
 class Compiler {
-    Compiler();
+
+    enum Precedence {
+        PREC_NONE, PREC_ASSIGNMENT, PREC_OR, PREC_AND,
+        PREC_EQUALITY, PREC_COMPARISON, PREC_TERM, PREC_FACTOR,
+        PREC_UNARY, PREC_PRIMARY
+    };
+
+    typedef void (Compiler::*ParseFn)();
+    struct ParseRule {
+        ParseFn fn;
+        Precedence precedence;
+    };
 
     /*
      * expression -> assignment
@@ -24,11 +34,7 @@ class Compiler {
      * unary = ('-'|'!') primary
      * primary = 'true' | 'false' | NUMBER | IDENTIFIER | '(' expression ')'
      * */
-    enum Precedence {
-        PREC_NONE, PREC_ASSIGNMENT, PREC_OR, PREC_AND,
-        PREC_EQUALITY, PREC_COMPARISON, PREC_TERM, PREC_FACTOR,
-        PREC_UNARY, PREC_PRIMARY
-    };
+
 
     struct Parser {
         Token current;
@@ -40,6 +46,7 @@ class Compiler {
         void errorAtCurrent(const char *errMsg);
         void errorAt(Token& token, const char *errMsg);
         void advance();
+        void consume(TokenType type,  const char* errMsg);
     };
 
 
@@ -55,7 +62,6 @@ class Compiler {
 
     void parsePrecedence(Precedence precedence);
     void expression();
-    void consume(TokenType type, const char* errMsg);
     void endCompiler();
 
 
@@ -65,25 +71,13 @@ class Compiler {
     void number();
     void literal();
 
-
-
-
-
-
-    typedef void (Compiler::*ParseFn)();
-    struct ParseRule {
-        ParseFn prefix;
-        ParseFn infix;
-        Precedence precedence;
-    };
-    //ParseFn getParseRule(TokenType type);
-    ParseRule rules[];
-    const ParseRule& getRule(TokenType type);
-
+    //
+    //ParseRule rules[50];
+    static const ParseFn getPrefixFn(TokenType type);
+    static const ParseRule getInfixRule(TokenType type);
 
 public:
     bool compile(const char* source, Chunk* chunk);
-
 };
 
 

@@ -2,34 +2,37 @@
 #include <cstdlib>
 #include <cassert>
 #include "../headers/compiler.h"
-Compiler::Compiler():
-    rules { [(int)TokenType::LEFT_PAREN] = {&Compiler::grouping, NULL, PREC_NONE},
-              [(int)TokenType::RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::COMMA] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::MINUS] = {&Compiler::unary, &Compiler::binary, PREC_TERM},
-              [(int)TokenType::PLUS] = {NULL, &Compiler::binary, PREC_TERM},
-              [(int)TokenType::SEMICOLON] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::SLASH] = {NULL, &Compiler::binary, PREC_FACTOR},
-              [(int)TokenType::STAR] = {NULL, &Compiler::binary, PREC_FACTOR},
-              [(int)TokenType::BANG] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::BANG_EQUAL] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::EQUAL] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::EQUAL_EQUAL] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::GREATER] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::LESS] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::LESS_EQUAL] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::SINGLE_QUOTE] = {NULL, NULL, PREC_NONE}, // TODO
-              [(int)TokenType::EQUAL_GREATER] = {NULL, NULL, PREC_NONE}, // TODO
-              [(int)TokenType::IDENTIFIER] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::NUMBER] = {&Compiler::number, NULL, PREC_NONE},
-              [(int)TokenType::ERROR] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::EOF] = {NULL, NULL, PREC_NONE},
-              [(int)TokenType::TRUE] = {&Compiler::literal, NULL, PREC_NONE},
-              [(int)TokenType::FALSE] = {&Compiler::literal, NULL, PREC_NONE},
 
-              }
-{}
+
+const Compiler::ParseFn Compiler::getPrefixFn(TokenType type){
+    switch (type) {
+        case TokenType::LEFT_PAREN: return &Compiler::grouping;
+        case TokenType::NUMBER: return  &Compiler::number;
+        case TokenType::FALSE:
+        case TokenType::TRUE: return &Compiler::literal;
+        case TokenType::MINUS:
+        case TokenType::BANG: return &Compiler::unary;
+        default: return NULL;
+    }
+}
+
+const Compiler::ParseRule Compiler::getInfixRule(TokenType type) {
+    switch (type) {
+        case TokenType::PLUS:
+        case TokenType::MINUS: return {&Compiler::binary, PREC_TERM};
+        case TokenType::STAR:
+        case TokenType::SLASH: return {&Compiler::binary, PREC_FACTOR};
+        case TokenType::LESS:
+        case TokenType::LESS_EQUAL:
+        case TokenType::GREATER:
+        case TokenType::GREATER_EQUAL:  return {&Compiler::binary, PREC_COMPARISON};
+        case TokenType::EQUAL_EQUAL:
+        case TokenType::BANG_EQUAL:  return {&Compiler::binary, PREC_EQUALITY};
+        default: return {NULL, PREC_NONE};
+    }
+}
+
+
 
 void Compiler::emitReturn() {
     writeByte(OP_RETURN);
@@ -65,24 +68,25 @@ void Compiler::Parser::advance(){
         errorAtCurrent(current.start);
     }
 }
-const Compiler::ParseRule& Compiler::getRule(TokenType type){
-    return rules[(int )type];
+void Compiler::Parser::consume(TokenType type, const char* errMsg){
+    if(current.type == type) advance();
+    else errorAtCurrent(errMsg);
 }
 
 
 void Compiler::parsePrecedence(Precedence precedence) {
     parser.advance(); // first token become parser.previous
-    ParseFn prefixRule = getRule(parser.previous.type).prefix;
-    if(prefixRule == NULL){
-        parser.errorAt(parser.previous, "Expect prefix rule or literal");
+    ParseFn prefixFn = getPrefixFn(parser.previous.type);
+    if(prefixFn == NULL){
+        parser.errorAt(parser.previous, "Expect prefix fn or literal");
         return;
     }
-    (this->*prefixRule)(); // stop on the next operator or at end
+    (this->*prefixFn)(); // stop on the next operator or at end
     // continue to consume parts with higher precedence
-    while (getRule(parser.current.type).precedence >= precedence){
+    ParseRule infixRule;
+    while ( infixRule = getInfixRule(parser.current.type), infixRule.precedence >= precedence){
         parser.advance();
-        ParseFn infixRule = getRule(parser.previous.type).infix;
-        (this->*infixRule)();
+        (this->*infixRule.fn)();
     }
 }
 
@@ -95,12 +99,12 @@ void Compiler::writeConstant(Value value){
 
 void Compiler::grouping(){
     expression();
-    consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
+    parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 void Compiler::binary(){
     TokenType operatorType = parser.previous.type;
-    const ParseRule& rule = getRule(operatorType);
+    const ParseRule& rule = getInfixRule(operatorType);
     parsePrecedence((Precedence)((int)rule.precedence + 1));
     switch (operatorType) {
         case TokenType::MINUS:
@@ -146,7 +150,7 @@ void Compiler::number() {
 
 void Compiler::literal(){
     bool value = parser.previous.type == TokenType::TRUE;
-    writeConstant(Value(value));
+    writeByte(value ? OP_TRUE : OP_FALSE);
 }
 
 void Compiler::expression() {
@@ -162,7 +166,19 @@ bool Compiler::compile(const char*source, Chunk* chunk){
 
     parser.advance(); // first token become parser.previous
     expression();
-    consume(TokenType::EOF, "Expect end of expression");
-
+    parser.consume(TokenType::EOF, "Expect end of expression");
+    endCompiler();
     return !parser.hadError;
 }
+
+void Compiler::writeByte(byte byte1) {
+    chunk->write(byte1, parser.previous.line);
+}
+
+void Compiler::writeBytes(byte byte1, byte byte2) {
+    chunk->write(byte1, parser.previous.line);
+    chunk->write(byte2, parser.previous.line);
+
+}
+
+

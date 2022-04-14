@@ -16,7 +16,9 @@ enum OpCode {
     OP_NOT,
     OP_LESS,
     OP_EQUAL,
-    OP_GREATER
+    OP_GREATER,
+    OP_TRUE,
+    OP_FALSE
 };
 enum class ValueType {
     BOOL,
@@ -36,6 +38,9 @@ struct Value {
     inline explicit Value(double value):type(ValueType::NUMBER), as({.number = value}){};
     inline explicit Value(bool value):type(ValueType::BOOL), as({.boolean = value}){};
     inline explicit Value(Value* value):type(ValueType::POINTER), as({.pointer = value}){};
+
+    bool operator== (const Value& other) const;
+    void printValue();
 };
 
 //typedef double Value;
