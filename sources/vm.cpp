@@ -84,11 +84,13 @@ InterpretResult Vm::run() {
                     return InterpretResult::RUNTIME_ERROR;
                 }
                 if(rval.type == ValueType::STRING) {
-                    if(pointerTable.find(rval.as.string) == pointerTable.end()){
-                        runtimeError("Expected pointer under name %s", rval.as.string);
-                        return InterpretResult::RUNTIME_ERROR;
+                    const char* rname =  rval.as.string;
+                    if(pointerTable.find(rname) == pointerTable.end()){
+                        pointerTable[rname] = Value();
+                       // runtimeError("Expected pointer under name %s", rval.as.string);
+                       // return InterpretResult::RUNTIME_ERROR;
                     }
-                    pointerTable[name] = Value(&pointerTable.at(rval.as.string));
+                    pointerTable[name] = Value(&pointerTable.at(rname));
 
                 }
                 else {

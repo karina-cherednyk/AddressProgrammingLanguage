@@ -28,7 +28,8 @@ enum class ValueType {
     BOOL,
     NUMBER,
     POINTER,
-    STRING
+    STRING,
+    NIL
 };
 
 typedef uint8_t byte;
@@ -50,7 +51,7 @@ struct Value {
     inline explicit Value(bool value):type(ValueType::BOOL), as({.boolean = value}){};
     inline explicit Value(const Value* value):type(ValueType::POINTER), as({.pointer = value}){};
     inline explicit Value(const char* value):type(ValueType::STRING), as({.string = value}){};
-    inline Value():type(ValueType::BOOL), as({.boolean = false}){};
+    inline Value():type(ValueType::NIL), as({.boolean = false}){};
 
     bool operator== (const Value& other) const;
     void printValue() const;
