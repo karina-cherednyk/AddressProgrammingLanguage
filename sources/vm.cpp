@@ -61,9 +61,39 @@ InterpretResult Vm::run() {
 
         switch (*ip = readByte()) {
             case OP_RETURN:
+                return InterpretResult::OK;
+            case OP_PRINT:
                 pop().printValue();
                 printf("\n");
-                return InterpretResult::OK;
+                break;
+            case OP_POP:
+                pop();
+                break;
+            case OP_DEFINE_VAR:
+            {
+                const char* name = chunk->constants[readByte()].as.string;
+                varTable[name] = pop();
+                break;
+            }
+            case OP_SET_VAR:{
+                const char* name = chunk->constants[readByte()].as.string;
+                if(varTable.find(name) == varTable.end()){
+                    runtimeError("Undefined variable %s", name);
+                    return InterpretResult::RUNTIME_ERROR;
+                }
+                varTable[name] = peek(0);
+                break;
+            }
+            case OP_GET_VAR:
+            {
+                const char* name = chunk->constants[readByte()].as.string;
+                if(varTable.find(name) == varTable.end()){
+                    runtimeError("Undefined variable %s", name);
+                    return InterpretResult::RUNTIME_ERROR;
+                }
+                push(varTable[name]);
+                break;
+            }
             case OP_CONSTANT: {
                 Value constant = chunk->constants[readByte()];
                 push(constant);

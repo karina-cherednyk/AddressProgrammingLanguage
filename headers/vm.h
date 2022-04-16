@@ -2,6 +2,8 @@
 #define VM_H
 
 
+#include <map>
+#include <string>
 #include "chunk.h"
 #include "compiler.h"
 
@@ -19,6 +21,7 @@ class Vm {
     Value stack[STACK_MAX];
     Value* stackTop{stack};
     Compiler compiler;
+    std::map<std::string, Value> varTable;
 
     void runtimeError(const char* format, ...);
     InterpretResult run();

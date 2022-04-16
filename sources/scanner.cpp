@@ -109,6 +109,10 @@ TokenType Scanner::identifierType(){
             return checkKeyword("true", TokenType::TRUE);
         case 'f':
             return checkKeyword("false", TokenType::FALSE);
+        case 'p':
+            return checkKeyword("print", TokenType::PRINT);
+        case 'v':
+            return checkKeyword("var", TokenType::VAR);
     }
     return TokenType::IDENTIFIER;
 }

@@ -12,6 +12,7 @@ const Compiler::ParseFn Compiler::getPrefixFn(TokenType type){
         case TokenType::TRUE: return &Compiler::literal;
         case TokenType::MINUS:
         case TokenType::BANG: return &Compiler::unary;
+        case TokenType::IDENTIFIER: return  &Compiler::variable;
         default: return NULL;
     }
 }
@@ -60,6 +61,13 @@ void Compiler::Parser::errorAtCurrent(const char *errMsg) {
     errorAt(current,errMsg );
 }
 
+bool Compiler::Parser::match(TokenType type){
+    if(current.type != type) return false;
+    advance();
+    return true;
+}
+
+
 void Compiler::Parser::advance(){
     previous = current;
     while(true){
@@ -71,6 +79,19 @@ void Compiler::Parser::advance(){
 void Compiler::Parser::consume(TokenType type, const char* errMsg){
     if(current.type == type) advance();
     else errorAtCurrent(errMsg);
+}
+
+void Compiler::Parser::synchronize() {
+    panicMode = false;
+    while (current.type != TokenType::EOF){
+        if(previous.type == TokenType::SEMICOLON) return;
+        switch (current.type) {
+            case TokenType::PRINT:
+                return;
+            default: ;// do nothing
+        }
+        advance();
+    }
 }
 
 
@@ -156,6 +177,42 @@ void Compiler::literal(){
 void Compiler::expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
+void Compiler::expressionStatement() {
+    expression();
+    parser.consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    writeByte(OP_POP);
+}
+
+
+void Compiler::printStatement() {
+    expression();
+    parser.consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    writeByte(OP_PRINT);
+}
+
+
+void Compiler::varDeclaration() {
+    byte global = parseVariable("Expect variable name.");
+    if(parser.match(TokenType::EQUAL)) expression();
+    else writeByte(OP_NIL);
+    parser.consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    defineVariale(global);
+}
+
+void Compiler::statement() {
+    if(parser.match(TokenType::PRINT)){
+        printStatement();
+    }
+    else {
+        expressionStatement();
+    }
+}
+
+void Compiler::declaration(){
+    if(parser.match(TokenType::VAR)) varDeclaration();
+    else statement();
+    if(parser.panicMode) parser.synchronize();
+}
 
 bool Compiler::compile(const char*source, Chunk* chunk){
     parser.scanner.init(source);
@@ -165,8 +222,7 @@ bool Compiler::compile(const char*source, Chunk* chunk){
 
 
     parser.advance(); // first token become parser.previous
-    expression();
-    parser.consume(TokenType::EOF, "Expect end of expression");
+    while(!parser.match(TokenType::EOF)) declaration();
     endCompiler();
     return !parser.hadError;
 }
@@ -179,6 +235,27 @@ void Compiler::writeBytes(byte byte1, byte byte2) {
     chunk->write(byte1, parser.previous.line);
     chunk->write(byte2, parser.previous.line);
 
+}
+
+byte Compiler::parseVariable(const char *errMsg) {
+    parser.consume(TokenType::IDENTIFIER, errMsg);
+    return chunk->addConstant(Value(parser.previous.start));
+}
+
+void Compiler::defineVariable(byte global) {
+    writeBytes(OP_DEFINE_VAR, global);
+}
+
+void Compiler::variable() {
+    Token varName = parser.previous;
+    byte nameConst = chunk->addConstant(Value(varName.start));
+    if(parser.match(TokenType::EQUAL)){
+     expression();
+        writeBytes(OP_SET_VAR, nameConst);
+    }
+    else {
+        writeBytes(OP_GET_VAR, nameConst);
+    }
 }
 
 

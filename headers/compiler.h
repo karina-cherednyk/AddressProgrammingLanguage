@@ -21,6 +21,10 @@ class Compiler {
     };
 
     /*
+     * declaration -> varDecl | statement
+     * statement -> exprStatement | printStatement
+     * */
+    /*
      * expression -> assignment
      * assignment -> address_assignment | value_assignment
      * address_assignment -> ??
@@ -46,7 +50,10 @@ class Compiler {
         void errorAtCurrent(const char *errMsg);
         void errorAt(Token& token, const char *errMsg);
         void advance();
+        bool match(TokenType type);
         void consume(TokenType type,  const char* errMsg);
+
+        void synchronize();
     };
 
 
@@ -60,6 +67,14 @@ class Compiler {
     void emitReturn();
 
 
+    byte parseVariable(const char* errMsg);
+    void defineVariable(byte num);
+
+    void declaration();
+    void varDeclaration();
+    void statement();
+    void printStatement();
+    void expressionStatement();
     void parsePrecedence(Precedence precedence);
     void expression();
     void endCompiler();
@@ -70,6 +85,7 @@ class Compiler {
     void unary();
     void number();
     void literal();
+    void variable();
 
     //
     //ParseRule rules[50];
