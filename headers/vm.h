@@ -19,9 +19,13 @@ class Vm {
     Chunk* chunk{NULL};
     std::vector<byte>::iterator ip;
     Value stack[STACK_MAX];
-    Value* stackTop{stack};
+    size_t stackCount{0};
     Compiler compiler;
-    std::map<std::string, Value> varTable;
+    std::map<std::string, Value> pointerTable;
+
+    Value constants[STACK_MAX];
+    size_t constantsSize{0};
+
 
     void runtimeError(const char* format, ...);
     InterpretResult run();

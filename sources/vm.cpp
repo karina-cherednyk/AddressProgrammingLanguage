@@ -4,11 +4,11 @@
 #include "../headers/vm.h"
 
 void Vm::initVM() {
-    stackTop = stack;
+    stackCount = 0;
 }
 
 void Vm::freeVM() {
-
+    freeStrings();
 }
 
 void Vm::runtimeError(const char* format, ...){
@@ -21,19 +21,19 @@ void Vm::runtimeError(const char* format, ...){
     size_t instruction = ip - chunk->code.begin() - 1;
     int line = chunk->lines[instruction];
     fprintf(stderr, "[line %d] in script \n", line);
-    stackTop = stack;
+    stackCount = 0;
 }
 
-void Vm::push(Value value) {
-    *(stackTop++) = value;
+void Vm::push(const Value value) {
+    stack[stackCount++] = value;
 }
 
 Value Vm::pop() {
-    return *(--stackTop);
+    return stack[--stackCount];
 }
 
 Value Vm::peek(size_t distance){
-    return  *(stackTop - 1 - distance);
+    return  stack[stackCount - 1 - distance];
 }
 
 byte Vm::readByte() {
@@ -68,30 +68,56 @@ InterpretResult Vm::run() {
                 break;
             case OP_POP:
                 pop();
+                constants[1];
                 break;
-            case OP_DEFINE_VAR:
-            {
-                const char* name = chunk->constants[readByte()].as.string;
-                varTable[name] = pop();
+
+            case OP_SET_POINTER: {
+                Value rval = pop();
+                Value lval = pop();
+                const char* name;
+                if(lval.type == ValueType::NUMBER) {
+                        name = addNumString(lval.as.number);
+                } else if(lval.type == ValueType::STRING){
+                        name = lval.as.string;
+                } else {
+                    runtimeError("Expected pointers only of string or number");
+                    return InterpretResult::RUNTIME_ERROR;
+                }
+                if(rval.type == ValueType::STRING) {
+                    if(pointerTable.find(rval.as.string) == pointerTable.end()){
+                        runtimeError("Expected pointer under name %s", rval.as.string);
+                        return InterpretResult::RUNTIME_ERROR;
+                    }
+                    pointerTable[name] = Value(&pointerTable.at(rval.as.string));
+
+                }
+                else {
+                    constants[constantsSize++] = rval;
+                    pointerTable[name] = Value(&constants[constantsSize -1]);
+                }
+                push(pointerTable[name]);
                 break;
             }
-            case OP_SET_VAR:{
-                const char* name = chunk->constants[readByte()].as.string;
-                if(varTable.find(name) == varTable.end()){
+            case OP_GET_POINTER: {
+                Value lval = pop();
+                if(lval.type == ValueType::POINTER){
+                    push(*lval.as.pointer);
+                    break;
+                }
+                const char* name;
+                if(lval.type == ValueType::NUMBER) {
+                    name = addNumString(lval.as.number);
+                } else if(lval.type == ValueType::STRING){
+                    name = lval.as.string;
+                } else {
+                    runtimeError("Expected pointers only of string or number");
+                    return InterpretResult::RUNTIME_ERROR;
+                }
+                if(pointerTable.find(name) == pointerTable.end()){
                     runtimeError("Undefined variable %s", name);
                     return InterpretResult::RUNTIME_ERROR;
                 }
-                varTable[name] = peek(0);
-                break;
-            }
-            case OP_GET_VAR:
-            {
-                const char* name = chunk->constants[readByte()].as.string;
-                if(varTable.find(name) == varTable.end()){
-                    runtimeError("Undefined variable %s", name);
-                    return InterpretResult::RUNTIME_ERROR;
-                }
-                push(varTable[name]);
+                push(*pointerTable.at(name).as.pointer);
                 break;
             }
             case OP_CONSTANT: {

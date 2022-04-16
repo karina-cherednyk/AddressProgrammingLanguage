@@ -21,7 +21,6 @@ class Compiler {
     };
 
     /*
-     * declaration -> varDecl | statement
      * statement -> exprStatement | printStatement
      * */
     /*
@@ -70,7 +69,6 @@ class Compiler {
     byte parseVariable(const char* errMsg);
     void defineVariable(byte num);
 
-    void declaration();
     void varDeclaration();
     void statement();
     void printStatement();
@@ -86,6 +84,7 @@ class Compiler {
     void number();
     void literal();
     void variable();
+    void pointer();
 
     //
     //ParseRule rules[50];

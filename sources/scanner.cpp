@@ -70,8 +70,10 @@ void Scanner::skipWhitespaces(){
             case '\t':
             case '\r':
                 advance(); break;
-            case '\n':
-                line++; advance(); break;
+            case '[':
+                while(!match(']') && !isAtEnd()) advance();
+                break;
+
             default: return;
         }
     }
@@ -111,8 +113,6 @@ TokenType Scanner::identifierType(){
             return checkKeyword("false", TokenType::FALSE);
         case 'p':
             return checkKeyword("print", TokenType::PRINT);
-        case 'v':
-            return checkKeyword("var", TokenType::VAR);
     }
     return TokenType::IDENTIFIER;
 }
@@ -130,9 +130,9 @@ Token Scanner::scanToken() {
     if(isDigit(c)) return number();
     if(isAlpha(c)) return identifier();
     switch (c) {
-       // case '\n': line++; return makeToken(TokenType::SEMICOLON);
-        case ';': return makeToken(TokenType::SEMICOLON);
-        case ',': return makeToken(TokenType::COMMA);
+        case '\n': line++; return makeToken(TokenType::DIVIDER);
+        case ',':
+        case ';': return makeToken(TokenType::DIVIDER);
         case '-': return makeToken(TokenType::MINUS);
         case '+': return makeToken(TokenType::PLUS);
         case '*': return makeToken(TokenType::STAR);

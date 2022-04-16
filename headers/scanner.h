@@ -4,7 +4,7 @@
 
 enum  class TokenType {
 // Single-character tokens.
-    COMMA, SEMICOLON,
+    DIVIDER,
     MINUS, PLUS, SLASH, STAR, LEFT_PAREN, RIGHT_PAREN,
 // One or two character tokens.
     BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER,
@@ -12,7 +12,7 @@ enum  class TokenType {
 // Literals.
     IDENTIFIER,  NUMBER, ERROR, EOF,
 // Keywords.
-    TRUE, FALSE, PRINT, VAR
+    TRUE, FALSE, PRINT
 /*        TOKEN_AND, TOKEN_CLASS, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF,
         TOKEN_NIL, TOKEN_OR, TOKEN_PRINT, TOKEN_RETURN, TOKEN_SUPER, TOKEN_THIS, TOKEN_TRUE,
         TOKEN_VAR, TOKEN_WHILE, ERROR, TOKEN_EOF*/
@@ -21,9 +21,9 @@ enum  class TokenType {
 
 struct Token {
     TokenType type;
-    const char* start;
-    int length;
-    int line;
+    const char* start{nullptr};
+    int length{0};
+    int line{-1};
 };
 
 class Scanner {
