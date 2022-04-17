@@ -33,9 +33,9 @@ static void repl() {
 
 int main(int argc, const char* argv[]) {
     vm.initVM();
-    if(argc == 1) repl();
-    else if(argc == 2) runFile(argv[1]);
-  //  runFile("..\\unitTests\\test1.txt");
+//    if(argc == 1) repl();
+//    else if(argc == 2) runFile(argv[1]);
+    runFile("..\\unitTests\\test4.txt");
     vm.freeVM();
 
     return 0;

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cassert>
 #include "../headers/vm.h"
+#include "../headers/debug.h"
 
 void Vm::initVM() {
     stackCount = 0;
@@ -24,15 +25,15 @@ void Vm::runtimeError(const char* format, ...){
     stackCount = 0;
 }
 
-void Vm::push(const Value value) {
+void Vm::push(Val& value) {
     stack[stackCount++] = value;
 }
 
-Value Vm::pop() {
+Val& Vm::pop() {
     return stack[--stackCount];
 }
 
-Value Vm::peek(size_t distance){
+Val& Vm::peek(size_t distance){
     return  stack[stackCount - 1 - distance];
 }
 
@@ -40,9 +41,51 @@ byte Vm::readByte() {
     return *ip++;
 }
 
+//InterpretResult Vm::setPointer(bool  inverse){
+//    Value pointer, pointee;
+//    if(inverse) pointer = pop(), pointee = pop();
+//    else pointee = pop(), pointer = pop();
+//
+//    // work with pointer recognition
+//    const char* name;
+//    if(pointer.type == ValueType::NUMBER) {
+//        name = addNumString(pointer.as.number);
+//    } else if(pointer.type == ValueType::STRING){
+//        name = pointer.as.string;
+//    } else {
+//        runtimeError("Expected pointers only of string or number");
+//        return InterpretResult::RUNTIME_ERROR;
+//    }
+//
+//    // work with pointee recognition (in case it is of type pointer)
+//    if(pointee.type == ValueType::STRING) {
+//        const char* rname =  pointee.as.string;
+//        if(pointerTable.find(rname) == pointerTable.end()){
+//            pointerTable[rname] = Value();
+//            // runtimeError("Expected pointer under name %s", pointer.as.string);
+//            // return InterpretResult::RUNTIME_ERROR;
+//        }
+//        pointerTable[name] = Value(&pointerTable.at(rname));
+//    }
+//    else { // if it is primitive, allocate it on stack and assign its address to pointer
+//        memory[memorySize++] = pointee;
+//        pointerTable[name] = Value(&memory[memorySize - 1]);
+//    }
+//
+//
+//    if(inverse) push(*pointerTable[name].as.pointer);
+//    else push(pointerTable[name]);
+//    return InterpretResult::OK;
+//}
+
+
+
 InterpretResult Vm::run() {
+#ifdef DEBUG_H
+    disassembleInstructions(chunk);
+#endif
 #define CHECK_NEXT_NUMBER(pos) \
-    if(peek(pos).type != ValueType::NUMBER){   \
+    if(peek(pos).type != VType::NUMBER){   \
         runtimeError("Expected number.");      \
         return InterpretResult::RUNTIME_ERROR; \
     }                      \
@@ -51,7 +94,7 @@ InterpretResult Vm::run() {
     do {                         \
                 CHECK_NEXT_NUMBER(0);        \
                 CHECK_NEXT_NUMBER(1);        \
-                double b = pop().as.number;  \
+                double b = pop();  \
                 double a = pop().as.number;  \
                 push(Value(a op b));         \
     } while(false)
@@ -63,43 +106,17 @@ InterpretResult Vm::run() {
             case OP_RETURN:
                 return InterpretResult::OK;
             case OP_PRINT:
-                pop().printValue();
-                printf("\n");
+                printVal(pop());
                 break;
             case OP_POP:
                 pop();
-                constants[1];
                 break;
-
-            case OP_SET_POINTER: {
-                Value rval = pop();
-                Value lval = pop();
-                const char* name;
-                if(lval.type == ValueType::NUMBER) {
-                        name = addNumString(lval.as.number);
-                } else if(lval.type == ValueType::STRING){
-                        name = lval.as.string;
-                } else {
-                    runtimeError("Expected pointers only of string or number");
-                    return InterpretResult::RUNTIME_ERROR;
-                }
-                if(rval.type == ValueType::STRING) {
-                    const char* rname =  rval.as.string;
-                    if(pointerTable.find(rname) == pointerTable.end()){
-                        pointerTable[rname] = Value();
-                       // runtimeError("Expected pointer under name %s", rval.as.string);
-                       // return InterpretResult::RUNTIME_ERROR;
-                    }
-                    pointerTable[name] = Value(&pointerTable.at(rname));
-
-                }
-                else {
-                    constants[constantsSize++] = rval;
-                    pointerTable[name] = Value(&constants[constantsSize -1]);
-                }
-                push(pointerTable[name]);
+            case OP_SET_POINTER_INVERSE:
+                    if(setPointer(true) != InterpretResult::OK) return InterpretResult::RUNTIME_ERROR;
+                    break;
+            case OP_SET_POINTER:
+                if(setPointer(false) != InterpretResult::OK) return InterpretResult::RUNTIME_ERROR;
                 break;
-            }
             case OP_GET_POINTER: {
                 Value lval = pop();
                 if(lval.type == ValueType::POINTER){
@@ -122,11 +139,10 @@ InterpretResult Vm::run() {
                 push(*pointerTable.at(name).as.pointer);
                 break;
             }
-            case OP_CONSTANT: {
-                Value constant = chunk->constants[readByte()];
-                push(constant);
-                break;
-            }
+            case OP_CONSTANT:
+                push(chunk->constants[readByte()]); break;
+
+
             case OP_TRUE:
                 push(Value(true)); break;
             case OP_FALSE:
@@ -180,3 +196,12 @@ bool Vm::isFalsey(Value value) {
 
 
 
+void printVal(const Val& x) {
+    switch (x.type) {
+        case VType::NUMBER:
+            printf("%g", x.as.val); break;
+        case VType::POINTER:
+            printf("Pointer:\t\n");
+            printVal(*x.as.pointTo); break;
+    }
+}

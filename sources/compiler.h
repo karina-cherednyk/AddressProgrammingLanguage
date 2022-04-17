@@ -2,8 +2,8 @@
 #define COMPILER_H
 
 
-#include "scanner.h"
-#include "chunk.h"
+#include "../headers/scanner.h"
+#include "../headers/chunk.h"
 
 
 class Compiler {
@@ -26,8 +26,8 @@ class Compiler {
     /*
      * expression -> assignment
      * assignment -> address_assignment | value_assignment
-     * address_assignment -> ??
-     * value_assignment = (IDENTIFIER '=' assignment) | or
+     * address_assignment -> or => or
+     * value_assignment = '(or) '=' assignment | or
      * or = and ( 'or' and )*
      * and = eq ( 'and' eq )*
      * eq = comp (  ('=='|'!=') comp )*
@@ -65,11 +65,6 @@ class Compiler {
     void writeConstant(Value value);
     void emitReturn();
 
-
-    byte parseVariable(const char* errMsg);
-    void defineVariable(byte num);
-
-    void varDeclaration();
     void statement();
     void printStatement();
     void expressionStatement();
@@ -85,6 +80,7 @@ class Compiler {
     void literal();
     void variable();
     void pointer();
+    void refer();
 
     //
     //ParseRule rules[50];

@@ -2,9 +2,10 @@
 #include <cassert>
 #include "../headers/chunk.h"
 
-void Chunk::write(byte val, int line) {
+int Chunk::write(byte val, int line) {
     lines.push_back(line);
     code.push_back(val);
+    return code.size() - 1;
 }
 
 
@@ -15,12 +16,12 @@ int Chunk::addConstant(Value const_val) {
 
 void Value::printValue() const{
     switch (type) {
+        case ValueType::STRING:
+            printf("%s", as.string); break;
         case ValueType::NUMBER:
             printf("%g", as.number); break;
         case ValueType::BOOL:
             printf(as.boolean ? "true" : "false"); break;
-        case ValueType::POINTER:
-            printf("Pointer to :\n\t"); as.pointer->printValue();
     }
 }
 

@@ -23,6 +23,7 @@ enum OpCode {
     OP_POP,
     OP_SET_POINTER,
     OP_GET_POINTER,
+    OP_SET_POINTER_INVERSE,
 };
 enum class ValueType {
     BOOL,
@@ -69,7 +70,7 @@ struct Chunk {
     std::vector<int> lines;
     std::vector<Value> constants;
 
-    void write(byte val, int line);
+    int write(byte val, int line);
     int addConstant(Value const_val);
 };
 
