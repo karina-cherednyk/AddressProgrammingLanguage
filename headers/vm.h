@@ -18,14 +18,14 @@ class Vm {
 
     Chunk* chunk{NULL};
     std::vector<byte>::iterator ip;
+
     Value stack[STACK_MAX];
     size_t stackCount{0};
+    Value memory[STACK_MAX];
+    size_t memorySize{0};
+
     Compiler compiler;
-    std::map<std::string, Value> pointerTable;
-
-    Value constants[STACK_MAX];
-    size_t constantsSize{0};
-
+    std::map<const char*, Value> pMap;
 
     void runtimeError(const char* format, ...);
     InterpretResult run();
@@ -34,10 +34,11 @@ class Vm {
     void push(Value value);
     Value pop();
     Value peek(size_t distance);
-
+    InterpretResult setPointer(bool inverse);
 
 
     static bool isFalsey(Value value);
+    Value* addToMemory(const Value& value);
 
 public:
     InterpretResult interpret(const char* source);

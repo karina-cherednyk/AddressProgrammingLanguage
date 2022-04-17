@@ -17,18 +17,18 @@ void Value::printValue() const{
     switch (type) {
         case ValueType::NUMBER:
             printf("%g", as.number); break;
-        case ValueType::BOOL:
-            printf(as.boolean ? "true" : "false"); break;
+        case ValueType::MAP_POINTER:
+            as.pointTo->printValue();
         case ValueType::POINTER:
-            printf("Pointer to :\n\t"); as.pointer->printValue();
+            printf("Pointer to :\n\t"); as.pointTo->printValue();
     }
 }
 
 bool Value::operator==(const Value &other) const {
     if(type !=  other.type) return false;
     switch (type) {
-        case ValueType::BOOL: return as.boolean == other.as.boolean;
-        case ValueType::POINTER: return as.pointer == other.as.pointer;
+        case ValueType::MAP_POINTER: return as.pointTo == other.as.pointTo;
+        case ValueType::POINTER: return as.pointTo == other.as.pointTo;
         case ValueType::NUMBER: return as.number == other.as.number;
     }
     return false;

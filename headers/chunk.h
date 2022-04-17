@@ -25,11 +25,10 @@ enum OpCode {
     OP_GET_POINTER,
 };
 enum class ValueType {
-    BOOL,
     NUMBER,
     POINTER,
     STRING,
-    NIL
+    MAP_POINTER
 };
 
 typedef uint8_t byte;
@@ -41,18 +40,20 @@ typedef uint8_t byte;
 struct Value {
     ValueType type;
     union {
-        bool boolean;
         double number;
         const char* string;
-        const Value* pointer;
+        Value* pointTo;
 
     } as;
     inline explicit Value(double value):type(ValueType::NUMBER), as({.number = value}){};
-    inline explicit Value(bool value):type(ValueType::BOOL), as({.boolean = value}){};
-    inline explicit Value(const Value* value):type(ValueType::POINTER), as({.pointer = value}){};
+    inline explicit Value(Value* value):type(ValueType::POINTER), as({.pointTo = value}){};
     inline explicit Value(const char* value):type(ValueType::STRING), as({.string = value}){};
-    inline Value():type(ValueType::NIL), as({.boolean = false}){};
-
+    inline Value(): type(ValueType::MAP_POINTER), as({.pointTo = nullptr}){};
+    inline static Value MapPointer(Value* pointee){
+        Value p;
+        p.as.pointTo = pointee;
+        return p;
+    }
     bool operator== (const Value& other) const;
     void printValue() const;
 };
