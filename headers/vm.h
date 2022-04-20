@@ -25,7 +25,7 @@ class Vm {
     size_t memorySize{0};
 
     Compiler compiler;
-    std::map<const char*, Value> pMap;
+    std::map<std::string , Value*> pMap;
 
     void runtimeError(const char* format, ...);
     InterpretResult run();
@@ -35,6 +35,7 @@ class Vm {
     Value pop();
     Value peek(size_t distance);
     InterpretResult setPointer(bool inverse);
+    InterpretResult getPointer();
 
 
     static bool isFalsey(Value value);

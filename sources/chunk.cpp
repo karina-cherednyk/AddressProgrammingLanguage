@@ -16,20 +16,22 @@ int Chunk::addConstant(Value const_val) {
 void Value::printValue() const{
     switch (type) {
         case ValueType::NUMBER:
-            printf("%g", as.number); break;
-        case ValueType::MAP_POINTER:
-            as.pointTo->printValue();
+            printf("%g", val.number); break;
+        case ValueType::BOXED:
+            val.pointTo->printValue(); break;
+        case ValueType::STRING:
+            printf("%s", val.string); break;
         case ValueType::POINTER:
-            printf("Pointer to :\n\t"); as.pointTo->printValue();
+            printf("Pointer to :\t"); val.pointTo->printValue(); break;
     }
 }
 
 bool Value::operator==(const Value &other) const {
     if(type !=  other.type) return false;
     switch (type) {
-        case ValueType::MAP_POINTER: return as.pointTo == other.as.pointTo;
-        case ValueType::POINTER: return as.pointTo == other.as.pointTo;
-        case ValueType::NUMBER: return as.number == other.as.number;
+        case ValueType::BOXED: return val.pointTo == other.val.pointTo;
+        case ValueType::POINTER: return val.pointTo == other.val.pointTo;
+        case ValueType::NUMBER: return val.number == other.val.number;
     }
     return false;
 }

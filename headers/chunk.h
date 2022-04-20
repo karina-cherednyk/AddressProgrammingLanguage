@@ -23,12 +23,13 @@ enum OpCode {
     OP_POP,
     OP_SET_POINTER,
     OP_GET_POINTER,
+    OP_SET_POINTER_INVERSE,
 };
 enum class ValueType {
     NUMBER,
     POINTER,
     STRING,
-    MAP_POINTER
+    BOXED
 };
 
 typedef uint8_t byte;
@@ -44,16 +45,16 @@ struct Value {
         const char* string;
         Value* pointTo;
 
-    } as;
-    inline explicit Value(double value):type(ValueType::NUMBER), as({.number = value}){};
-    inline explicit Value(Value* value):type(ValueType::POINTER), as({.pointTo = value}){};
-    inline explicit Value(const char* value):type(ValueType::STRING), as({.string = value}){};
-    inline Value(): type(ValueType::MAP_POINTER), as({.pointTo = nullptr}){};
-    inline static Value MapPointer(Value* pointee){
-        Value p;
-        p.as.pointTo = pointee;
+    } val;
+    inline explicit Value(double value): type(ValueType::NUMBER), val({.number = value}){};
+    inline explicit Value(Value* value): type(ValueType::POINTER), val({.pointTo = value}){};
+    inline explicit Value(const char* value): type(ValueType::STRING), val({.string = value}){};
+    inline static Value Boxed(Value* pointee){
+        Value p(pointee);
+        p.type = ValueType::BOXED;
         return p;
     }
+    inline explicit Value():type{ValueType::POINTER}, val({.pointTo = nullptr}) {};
     bool operator== (const Value& other) const;
     void printValue() const;
 };

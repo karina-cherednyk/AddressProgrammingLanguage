@@ -30,6 +30,7 @@ const Compiler::ParseRule Compiler::getInfixRule(TokenType type) {
         case TokenType::GREATER_EQUAL:  return {&Compiler::binary, PREC_COMPARISON};
         case TokenType::EQUAL_EQUAL:
         case TokenType::BANG_EQUAL:  return {&Compiler::binary, PREC_EQUALITY};
+        case TokenType::EQUAL_GREATER: return {&Compiler::refer, PREC_ASSIGNMENT};
         default: return {NULL, PREC_NONE};
     }
 }
@@ -166,7 +167,7 @@ void Compiler::unary(){
     }
 }
 void Compiler::number() {
-    double value = strtod(parser.previous.start, NULL);
+    double value = strtod(parser.previous.start, nullptr);
     writeConstant(Value(value));
 }
 
@@ -212,6 +213,10 @@ void Compiler::statement() {
 
 
 bool Compiler::compile(const char*source, Chunk* chunk){
+#ifdef DEBUG_H
+    disassembleInstructions(chunk);
+#endif
+
     parser.scanner.init(source);
     this->chunk = chunk;
     parser.hadError = false;
@@ -252,4 +257,8 @@ void Compiler::pointer() {
 
 }
 
+void Compiler::refer() {
+    parsePrecedence((Precedence)((int)Precedence::PREC_ASSIGNMENT + 1));
+    writeByte(OP_SET_POINTER_INVERSE);
+}
 

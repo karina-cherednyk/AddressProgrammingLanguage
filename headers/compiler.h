@@ -66,10 +66,7 @@ class Compiler {
     void emitReturn();
 
 
-    byte parseVariable(const char* errMsg);
-    void defineVariable(byte num);
 
-    void varDeclaration();
     void statement();
     void printStatement();
     void expressionStatement();
@@ -85,6 +82,7 @@ class Compiler {
     void literal();
     void variable();
     void pointer();
+    void refer();
 
     //
     //ParseRule rules[50];
