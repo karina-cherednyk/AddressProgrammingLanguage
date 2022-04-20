@@ -24,6 +24,7 @@ void disassembleInstructions(const Chunk* chunk){
             OP_CASE(OP_GET_POINTER)
             OP_CASE(OP_SET_POINTER_INVERSE)
             OP_CASE(OP_PART_END)
+            OP_CASE(OP_EXCHANGE)
             case OP_JUMP_IF_FALSE:
             case OP_JUMP: {
                 std::cout << "OP_JUMP ";

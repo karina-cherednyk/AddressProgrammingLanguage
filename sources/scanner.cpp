@@ -147,7 +147,6 @@ Token Scanner::scanToken() {
         case '}': return makeToken(TokenType::RIGHT_CURLY);
         case '|': return makeToken(TokenType::HORIZONTAL);
         case '!': return makeToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG);
-        case '<': return makeToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
         case '>': return makeToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER);
         case '=': {
             if(match('=')) return makeToken(TokenType::EQUAL_EQUAL);
@@ -156,6 +155,13 @@ Token Scanner::scanToken() {
         }
         case '.': {
             if(match('.') && match('.')) return makeToken(TokenType::DOTS_3);
+        }
+        case '<': {
+            if(match('=')){
+                if(match('>')) return makeToken(TokenType::LESS_EQUAL_GREATER);
+                else return makeToken(TokenType::LESS_EQUAL);
+            }
+            else return makeToken(TokenType::LESS);
         }
     }
     return errorToken("Unexpected token");

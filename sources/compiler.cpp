@@ -31,6 +31,7 @@ const Compiler::ParseRule Compiler::getInfixRule(TokenType type) {
         case TokenType::EQUAL_EQUAL:
         case TokenType::BANG_EQUAL:  return {&Compiler::binary, PREC_EQUALITY};
         case TokenType::EQUAL_GREATER: return {&Compiler::refer, PREC_ASSIGNMENT};
+        case TokenType::LESS_EQUAL_GREATER: return {&Compiler::exchange, PREC_ASSIGNMENT};
         default: return {NULL, PREC_NONE};
     }
 }
@@ -272,7 +273,7 @@ void Compiler::statement() {
 
     else if(parser.previous.type == TokenType::PR) PRStatement();
     else if(parser.previous.type == TokenType::PRINT) printStatement();
-    else if(parser.previous.type != TokenType::NEW_LINE) expressionStatement(!exprTokenConsumed);
+    else if(parser.previous.type != TokenType::NEW_LINE) expressionStatement(false);
 
     while ( parser.match(TokenType::INLINE_DIVIDER) ||
             parser.match(TokenType::NEW_LINE));
@@ -328,3 +329,7 @@ void Compiler::refer() {
     writeByte(OP_SET_POINTER_INVERSE);
 }
 
+void Compiler::exchange() {
+    parsePrecedence((Precedence)((int)Precedence::PREC_ASSIGNMENT + 1));
+    writeByte(OP_EXCHANGE);
+}

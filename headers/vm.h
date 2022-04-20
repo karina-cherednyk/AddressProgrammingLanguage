@@ -36,7 +36,7 @@ class Vm {
     Value peek(size_t distance);
     InterpretResult setPointer(bool inverse);
     InterpretResult getPointer();
-
+    Value* stringToPointer(std::string s);
 
     static bool isFalsey(Value value);
     Value* addToMemory(const Value& value);

@@ -34,7 +34,8 @@ enum OpCode {
     OP_SET_POINTER_INVERSE,
     OP_PART_END,
     OP_JUMP_IF_FALSE,
-    OP_JUMP
+    OP_JUMP,
+    OP_EXCHANGE
 };
 enum class ValueType {
     NUMBER,

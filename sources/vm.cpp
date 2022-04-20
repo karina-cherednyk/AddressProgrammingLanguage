@@ -23,6 +23,7 @@ void Vm::runtimeError(const char* format, ...){
     int line = chunk->lines[instruction];
     fprintf(stderr, "[line %d] in script \n", line);
     stackCount = 0;
+    programFinished = true;
 }
 
 void Vm::push(const Value value) {
@@ -45,7 +46,12 @@ Value* Vm::addToMemory(const Value& value){
     return &memory[memorySize-1];
 }
 
-#undef DEBUG_H
+Value* Vm::stringToPointer(std::string s){
+    if(has(pMap, s)) return pMap[s];
+    else return nullptr;
+}
+
+//#undef DEBUG_H
 InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
 #define CHECK_NEXT_NUMBER(pos) \
     if(peek(pos).type != ValueType::NUMBER){   \
@@ -88,6 +94,28 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
             case OP_JUMP: {
                 byte skipNext =  readByte();
                 ip += skipNext;
+                break;
+            }
+            case OP_EXCHANGE: {
+                Value a = pop();
+                Value b = pop();
+                if(a.type == ValueType::STRING){
+                    Value* t = stringToPointer(a.val.string);
+                    if(t) a = *t;
+                }
+                if(b.type == ValueType::STRING){
+                    Value* t = stringToPointer(b.val.string);
+                    if(t) b = *t;
+                }
+                if(a.type != ValueType::POINTER || b.type != ValueType::POINTER)
+                {
+                    runtimeError("Expected 2 pointers to exchange their values");
+                    return InterpretResult::RUNTIME_ERROR;
+                }
+                Value temp = *b.val.pointTo;
+                *b.val.pointTo = *a.val.pointTo;
+                *a.val.pointTo = temp;
+                push(b);
                 break;
             }
             case OP_POP:

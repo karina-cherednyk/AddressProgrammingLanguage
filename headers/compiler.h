@@ -80,7 +80,7 @@ class Compiler {
     void parsePrecedence(Precedence precedence, bool advanceFirst = true);
     void expression(bool advanceFirst = true);
     void endCompiler();
-
+    void checkLabel();
 
     void binary();
     void grouping();
@@ -90,7 +90,8 @@ class Compiler {
     void variable();
     void pointer();
     void refer();
-    void checkLabel();
+    void exchange();
+
 
     //
     //ParseRule rules[50];

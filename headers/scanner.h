@@ -10,7 +10,7 @@ enum  class TokenType {
     BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER,
     GREATER_EQUAL, LESS, LESS_EQUAL,  SINGLE_QUOTE, EQUAL_GREATER,
 // Three characters
-    DOTS_3,
+    DOTS_3, LESS_EQUAL_GREATER,
 // Literals.
     IDENTIFIER,  NUMBER, ERROR, EOF,
 // Keywords.
