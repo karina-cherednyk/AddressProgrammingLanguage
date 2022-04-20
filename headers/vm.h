@@ -41,7 +41,6 @@ class Vm {
     static bool isFalsey(Value value);
     Value* addToMemory(const Value& value);
 
-
     InterpretResult run(size_t startOffset = 0, size_t endOffset = 0);
     bool programFinished =  false;
 

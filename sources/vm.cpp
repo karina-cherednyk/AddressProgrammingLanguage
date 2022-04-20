@@ -150,7 +150,28 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
             case OP_NOT:
                 push(Value(isFalsey(pop()))  ); break;
             case OP_ADD:
-                BINARY_OP(+); break;
+            {
+                Value a = pop();
+                Value b = pop();
+                if(a.type == ValueType::STRING){
+                    Value* t = stringToPointer(a.val.string);
+                    if(t) a = *t;
+                }
+                if(b.type == ValueType::STRING){
+                    Value* t = stringToPointer(b.val.string);
+                    if(t) b = *t;
+                }
+                if(a.type == ValueType::NUMBER && b.type == ValueType::NUMBER){
+                    push(Value(a.val.number + b.val.number));
+                }
+                else if(a.type == ValueType::POINTER && b.type == ValueType::NUMBER){
+                    push(Value(a.val.pointTo + (int)b.val.number));
+                } else if(a.type == ValueType::NUMBER && b.type == ValueType::POINTER){
+                    Value* t = (Value* )b.val.pointTo + (int)a.val.number;
+                    push(Value(t));
+                }
+                break;
+            }
             case OP_SUBTRACT:
                 BINARY_OP(-); break;
             case OP_MULTIPLY:
@@ -201,7 +222,7 @@ InterpretResult Vm::setPointer(bool inverse){
     }
 
     Value* actualPointer;
-    if(pointer.type == ValueType::BOXED) actualPointer = pointer.val.pointTo;
+    if(pointer.type == ValueType::POINTER) actualPointer = &pointer;
     else {
         if(!has(pMap, pointerName)) {
             actualPointer = addToMemory(Value());
@@ -216,7 +237,8 @@ InterpretResult Vm::setPointer(bool inverse){
         if(!has(pMap, rname)) return InterpretResult::RUNTIME_ERROR;
         else actualPointer->val.pointTo = pMap[rname];
     } else if(pointee.type == ValueType::NUMBER){
-        actualPointer->val.pointTo = addToMemory(pointee);
+        if(actualPointer->val.pointTo == nullptr) actualPointer->val.pointTo = addToMemory(pointee);
+        else *actualPointer->val.pointTo = Value(pointee.val.number);
     } else if(pointee.type == ValueType::BOXED){
         actualPointer->val.pointTo = pointee.val.pointTo;
     } else
