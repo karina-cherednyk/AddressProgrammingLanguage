@@ -45,7 +45,7 @@ Value* Vm::addToMemory(const Value& value){
     return &memory[memorySize-1];
 }
 
-
+#undef DEBUG_H
 InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
 #define CHECK_NEXT_NUMBER(pos) \
     if(peek(pos).type != ValueType::NUMBER){   \
@@ -138,6 +138,7 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                 Value b = pop();
                 Value a = pop();
                 push(Value(a == b));
+                break;
             }
             case OP_PART_END: return InterpretResult::OK;
         }
@@ -193,7 +194,7 @@ InterpretResult Vm::setPointer(bool inverse){
     } else
         assert(false);
 
-    push(*actualPointer);
+    push(pointee);
     return InterpretResult::OK;
 }
 

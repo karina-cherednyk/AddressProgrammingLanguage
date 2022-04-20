@@ -47,7 +47,7 @@ void Compiler::endCompiler(){
 
 void Compiler::Parser::errorAt(Token& token, const char *message) {
     if(panicMode) return;
-    fprintf(stderr, "[line %d] Error", token.line);
+    fprintf(stderr, "[line %d] Compiler error", token.line);
 
     switch (token.type) {
         case TokenType::EOF: fprintf(stderr, " at end"); break;
@@ -212,7 +212,7 @@ void Compiler::patchJump(size_t commandIdx){
     chunk->code[commandIdx] = chunk->count() - commandIdx - 1;
 }
 
-// TODO: add support for many statements in one branch
+
 void Compiler::PRStatement() {
     parser.consume(TokenType::LEFT_CURLY, "Expected '{' after PR keyword.");
     expression();
@@ -222,15 +222,17 @@ void Compiler::PRStatement() {
 
 
     if(parser.current.type != TokenType::INLINE_DIVIDER && parser.current.type != TokenType::NEW_LINE &&
-       parser.current.type != TokenType::EOF && parser.current.type != TokenType::HORIZONTAL){
-        expression();
+       parser.current.type != TokenType::EOF && parser.current.type != TokenType::HORIZONTAL) {
+        do { statement();
+        }while(parser.previous.type == TokenType::INLINE_DIVIDER);
     }
     size_t trueEndJump = writeJump(OP_JUMP);
 
     patchJump(ifFalseJump);
 
     if(parser.match(TokenType::HORIZONTAL)){
-        expression();
+        do{ statement();
+        }while(parser.previous.type == TokenType::INLINE_DIVIDER);
     }
     patchJump(trueEndJump);
     // Stack: FALSE_BRANCH, TRUE_BRANCH, PREDICATE
@@ -260,19 +262,17 @@ void Compiler::statement() {
     bool exprTokenConsumed = false;
     if(parser.previous.type == TokenType::NEW_LINE) {
         checkLabel();
-        if(parser.previous.type == TokenType::INLINE_DIVIDER ||
-            parser.previous.type == TokenType::NEW_LINE || parser.current.type == TokenType::EOF) return;
-
         exprTokenConsumed = true;
-    }
+    } else parser.advance();
+
     if(parser.previous.type == TokenType::B) BStatement();
-    if(parser.previous.type == TokenType::BANG && (
+    else if(parser.previous.type == TokenType::BANG && ( parser.current.type == TokenType::HORIZONTAL ||
         parser.current.type == TokenType::INLINE_DIVIDER || parser.current.type == TokenType::NEW_LINE || parser.current.type == TokenType::EOF))
         writeReturn();
 
     else if(parser.previous.type == TokenType::PR) PRStatement();
     else if(parser.previous.type == TokenType::PRINT) printStatement();
-    else expressionStatement(!exprTokenConsumed);
+    else if(parser.previous.type != TokenType::NEW_LINE) expressionStatement(!exprTokenConsumed);
 
     while ( parser.match(TokenType::INLINE_DIVIDER) ||
             parser.match(TokenType::NEW_LINE));
