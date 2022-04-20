@@ -66,12 +66,16 @@ class Compiler {
     void writeByte(byte byte1);
     void writeBytes(byte byte1, byte byte2);
     void writeConstant(Value value);
-    void emitReturn();
-
+    void writeReturn();
+    size_t writeJump(byte command);
+    void patchJump(size_t commandIdx);
 
 
     void statement();
     void printStatement();
+    void BStatement();
+    void PRStatement(); // if statement
+
     void expressionStatement(bool advanceFirst);
     void parsePrecedence(Precedence precedence, bool advanceFirst = true);
     void expression(bool advanceFirst = true);
@@ -92,7 +96,7 @@ class Compiler {
     //ParseRule rules[50];
     static const ParseFn getPrefixFn(TokenType type);
     static const ParseRule getInfixRule(TokenType type);
-    std::map<std::string, size_t> labelMap;
+
 
 
 public:

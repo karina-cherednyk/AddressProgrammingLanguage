@@ -37,12 +37,12 @@ const Compiler::ParseRule Compiler::getInfixRule(TokenType type) {
 
 
 
-void Compiler::emitReturn() {
+void Compiler::writeReturn() {
     writeByte(OP_RETURN);
 }
 
 void Compiler::endCompiler(){
-    emitReturn();
+    writeReturn();
 }
 
 void Compiler::Parser::errorAt(Token& token, const char *message) {
@@ -193,17 +193,54 @@ void Compiler::expression(bool advanceFirst) {
 }
 void Compiler::expressionStatement(bool advanceFirst) {
     expression(advanceFirst);
-    while ( parser.match(TokenType::INLINE_DIVIDER) ||
-            parser.match(TokenType::NEW_LINE));
     writeByte(OP_POP);
 }
 
 
 void Compiler::printStatement() {
     expression();
+    writeByte(OP_PRINT);
+}
+
+size_t Compiler::writeJump(byte command){
+    writeByte(command);
+    writeByte(0xff);
+    return chunk->count() - 1;
+}
+
+void Compiler::patchJump(size_t commandIdx){
+    chunk->code[commandIdx] = chunk->count() - commandIdx - 1;
+}
+
+// TODO: add support for many statements in one branch
+void Compiler::PRStatement() {
+    parser.consume(TokenType::LEFT_CURLY, "Expected '{' after PR keyword.");
+    expression();
+    parser.consume(TokenType::RIGHT_CURLY, "Expected '}' after predicate.");
+
+    size_t ifFalseJump = writeJump(OP_JUMP_IF_FALSE);
+
+
+    if(parser.current.type != TokenType::INLINE_DIVIDER && parser.current.type != TokenType::NEW_LINE &&
+       parser.current.type != TokenType::EOF && parser.current.type != TokenType::HORIZONTAL){
+        expression();
+    }
+    size_t trueEndJump = writeJump(OP_JUMP);
+
+    patchJump(ifFalseJump);
+
+    if(parser.match(TokenType::HORIZONTAL)){
+        expression();
+    }
+    patchJump(trueEndJump);
+    // Stack: FALSE_BRANCH, TRUE_BRANCH, PREDICATE
+
+}
+
+void Compiler::BStatement() {
     while ( parser.match(TokenType::INLINE_DIVIDER) ||
             parser.match(TokenType::NEW_LINE));
-    writeByte(OP_PRINT);
+    writeByte(OP_PART_END);
 }
 
 void Compiler::checkLabel() {
@@ -211,20 +248,12 @@ void Compiler::checkLabel() {
     if(parser.previous.type == TokenType::IDENTIFIER && parser.peek(TokenType::DOTS_3))
     {
         std::string  labelName(parser.previous.start, parser.previous.start + parser.previous.length);
-        labelMap[labelName] = chunk->count();
+        chunk->labelMap[labelName] = chunk->count();
         parser.advance(); // consume ...
         parser.advance(); // consume next token
     }
-    else if(parser.previous.type == TokenType::IDENTIFIER && (parser.peek(TokenType::INLINE_DIVIDER) || parser.peek(TokenType::NEW_LINE) || parser.peek(TokenType::EOF))){
-        // go to line marked by this label
-        std::string  labelName(parser.previous.start, parser.previous.start + parser.previous.length);
-        if(!has(labelMap, labelName))
-            parser.errorAtCurrent("No such label");
-        else writeBytes(OP_GOTO, labelMap[labelName]);
-        while ( parser.match(TokenType::INLINE_DIVIDER) ||
-                parser.match(TokenType::NEW_LINE));
-    }
 }
+
 
 
 void Compiler::statement() {
@@ -236,8 +265,17 @@ void Compiler::statement() {
 
         exprTokenConsumed = true;
     }
-    if(parser.previous.type == TokenType::PRINT) printStatement();
+    if(parser.previous.type == TokenType::B) BStatement();
+    if(parser.previous.type == TokenType::BANG && (
+        parser.current.type == TokenType::INLINE_DIVIDER || parser.current.type == TokenType::NEW_LINE || parser.current.type == TokenType::EOF))
+        writeReturn();
+
+    else if(parser.previous.type == TokenType::PR) PRStatement();
+    else if(parser.previous.type == TokenType::PRINT) printStatement();
     else expressionStatement(!exprTokenConsumed);
+
+    while ( parser.match(TokenType::INLINE_DIVIDER) ||
+            parser.match(TokenType::NEW_LINE));
 
     if(parser.panicMode) parser.synchronize();
 }
@@ -245,10 +283,6 @@ void Compiler::statement() {
 
 
 bool Compiler::compile(const char*source, Chunk* chunk){
-#ifdef DEBUG_H
-    disassembleInstructions(chunk);
-#endif
-
     parser.scanner.init(source);
     this->chunk = chunk;
     parser.hadError = false;

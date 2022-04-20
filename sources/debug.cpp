@@ -23,15 +23,22 @@ void disassembleInstructions(const Chunk* chunk){
             OP_CASE(OP_SET_POINTER)
             OP_CASE(OP_GET_POINTER)
             OP_CASE(OP_SET_POINTER_INVERSE)
-            case OP_GOTO:
-                std::cout << "OP_GOTO :\t"  << *ip++ << std::endl;
+            OP_CASE(OP_PART_END)
+            case OP_JUMP_IF_FALSE:
+            case OP_JUMP: {
+                std::cout << "OP_JUMP ";
+                if((OpCode)*(ip-1) == OP_JUMP_IF_FALSE) std::cout << "if false ";
+                std::cout << (size_t)*ip++ ;
+                std::cout << std::endl;
                 break;
+            }
             case OP_CONSTANT:{
                 std::cout << "OP_CONSTANT \t";
                 chunk->constants.at(*ip++).printValue();
                 std::cout << std::endl;
+                break;
             }
-            default: ;
+            default: std::cout << "Unknown OP :\t"  << *(ip-1) << std::endl;;
         }
     }
 #undef OP_CASE

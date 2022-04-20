@@ -28,7 +28,7 @@ class Vm {
     std::map<std::string , Value*> pMap;
 
     void runtimeError(const char* format, ...);
-    InterpretResult run();
+
 
     byte readByte();
     void push(Value value);
@@ -40,6 +40,10 @@ class Vm {
 
     static bool isFalsey(Value value);
     Value* addToMemory(const Value& value);
+
+
+    InterpretResult run(size_t startOffset = 0, size_t endOffset = 0);
+    bool programFinished =  false;
 
 public:
     InterpretResult interpret(const char* source);

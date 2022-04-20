@@ -32,13 +32,16 @@ enum OpCode {
     OP_SET_POINTER,
     OP_GET_POINTER,
     OP_SET_POINTER_INVERSE,
-    OP_GOTO
+    OP_PART_END,
+    OP_JUMP_IF_FALSE,
+    OP_JUMP
 };
 enum class ValueType {
     NUMBER,
     POINTER,
     STRING,
-    BOXED
+    BOXED,
+    BOOL
 };
 
 typedef uint8_t byte;
@@ -50,11 +53,13 @@ typedef uint8_t byte;
 struct Value {
     ValueType type;
     union {
+        bool boolean;
         double number;
         const char* string;
         Value* pointTo;
 
     } val;
+    inline explicit Value(bool value): type(ValueType::BOOL), val({.boolean = value}){};
     inline explicit Value(double value): type(ValueType::NUMBER), val({.number = value}){};
     inline explicit Value(Value* value): type(ValueType::POINTER), val({.pointTo = value}){};
     inline explicit Value(const char* value): type(ValueType::STRING), val({.string = value}){};
@@ -66,6 +71,7 @@ struct Value {
     inline explicit Value():type{ValueType::POINTER}, val({.pointTo = nullptr}) {};
     bool operator== (const Value& other) const;
     void printValue() const;
+
 };
 
 //typedef double Value;
@@ -83,7 +89,7 @@ struct Chunk {
     void write(byte val, int line);
     int addConstant(Value const_val);
     inline size_t count(){ return  code.size(); }
-
+    std::map<std::string, size_t> labelMap;
 };
 
 

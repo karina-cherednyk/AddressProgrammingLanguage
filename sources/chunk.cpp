@@ -21,6 +21,8 @@ void Value::printValue() const{
             val.pointTo->printValue(); break;
         case ValueType::STRING:
             printf("%s", val.string); break;
+        case ValueType::BOOL:
+            printf("%s", val.boolean ? "true" : "false"); break;
         case ValueType::POINTER:
             printf("Pointer to :\t"); val.pointTo->printValue(); break;
     }

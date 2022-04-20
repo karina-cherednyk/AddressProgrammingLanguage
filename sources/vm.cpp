@@ -46,7 +46,7 @@ Value* Vm::addToMemory(const Value& value){
 }
 
 
-InterpretResult Vm::run() {
+InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
 #define CHECK_NEXT_NUMBER(pos) \
     if(peek(pos).type != ValueType::NUMBER){   \
         runtimeError("Expected number.");      \
@@ -66,10 +66,11 @@ InterpretResult Vm::run() {
     disassembleInstructions(chunk);
 #endif
 
-    for(ip = chunk->code.begin(); ip != chunk->code.end(); ){
+    for(ip = chunk->code.begin() + startOffset; ip != chunk->code.end() - endOffset && !programFinished; ){
 
         switch (*ip = readByte()) {
             case OP_RETURN:
+                programFinished = true;
                 return InterpretResult::OK;
             case OP_PRINT:
             {
@@ -78,9 +79,27 @@ InterpretResult Vm::run() {
                     pMap[v.val.string]->printValue();
                 else v.printValue();  printf("\n"); break;
             }
+            case OP_JUMP_IF_FALSE:
+            {
+                byte skipNext =  readByte();
+                if(isFalsey(pop())) ip += skipNext;
+                break;
+            }
+            case OP_JUMP: {
+                byte skipNext =  readByte();
+                ip += skipNext;
+                break;
+            }
             case OP_POP:
-                pop(); break;
-
+            {
+                Value v = pop();
+                std::string label;
+                if(v.type == ValueType::NUMBER) label = std::to_string(v.val.number);
+                else if(v.type == ValueType::STRING) label = v.val.string;
+                else break;
+                if(!has(chunk->labelMap, label) ) break;
+                run(chunk->labelMap[label]); return InterpretResult::OK;
+            }
             case OP_SET_POINTER:
                 if(setPointer(false) == InterpretResult::RUNTIME_ERROR)
                     return InterpretResult::RUNTIME_ERROR; break;
@@ -93,7 +112,7 @@ InterpretResult Vm::run() {
             case OP_CONSTANT:
                 push(chunk->constants[readByte()]); break;
             case OP_TRUE:
-                push(Value(0.0)); break;
+                push(Value(true)); break;
             case OP_FALSE:
                 push(Value(false)); break;
             case OP_NEGATE:
@@ -101,7 +120,7 @@ InterpretResult Vm::run() {
                 push(Value(-(pop()).val.number));
                 break;
             case OP_NOT:
-                push(Value(isFalsey(pop()) ? 0.0 : 1.0)  ); break;
+                push(Value(isFalsey(pop()))  ); break;
             case OP_ADD:
                 BINARY_OP(+); break;
             case OP_SUBTRACT:
@@ -120,9 +139,7 @@ InterpretResult Vm::run() {
                 Value a = pop();
                 push(Value(a == b));
             }
-            case OP_GOTO: {
-
-            }
+            case OP_PART_END: return InterpretResult::OK;
         }
     }
     runtimeError("No return statement");
@@ -185,13 +202,15 @@ InterpretResult Vm::interpret(const char *source) {
     Chunk codeChunk;
     if(!compiler.compile(source, &codeChunk)) return InterpretResult::COMPILE_ERROR;
     this->chunk = &codeChunk;
+    programFinished = false;
     InterpretResult result = run();
     this->chunk = NULL;
     return result;
 }
 
 bool Vm::isFalsey(Value value) {
-    return value.type != ValueType::NUMBER  || value.val.number != 0 ;
+    return value.type == ValueType::NUMBER  && value.val.number != 0 ||
+           value.type == ValueType::BOOL  && !value.val.boolean;
 }
 
 
