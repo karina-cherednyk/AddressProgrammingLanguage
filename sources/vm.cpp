@@ -44,10 +44,6 @@ Value* Vm::addToMemory(const Value& value){
     memory[memorySize++] = value;
     return &memory[memorySize-1];
 }
-bool has(const std::map<std::string ,Value*>& map, std::string val){
-    return map.find(val) != map.end();
-}
-
 
 
 InterpretResult Vm::run() {
@@ -123,6 +119,9 @@ InterpretResult Vm::run() {
                 Value b = pop();
                 Value a = pop();
                 push(Value(a == b));
+            }
+            case OP_GOTO: {
+
             }
         }
     }

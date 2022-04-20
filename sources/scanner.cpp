@@ -130,9 +130,9 @@ Token Scanner::scanToken() {
     if(isDigit(c)) return number();
     if(isAlpha(c)) return identifier();
     switch (c) {
-        case '\n': line++; return makeToken(TokenType::DIVIDER);
+        case '\n': line++; return makeToken(TokenType::NEW_LINE);
         case ',':
-        case ';': return makeToken(TokenType::DIVIDER);
+        case ';': return makeToken(TokenType::INLINE_DIVIDER);
         case '-': return makeToken(TokenType::MINUS);
         case '+': return makeToken(TokenType::PLUS);
         case '*': return makeToken(TokenType::STAR);
@@ -149,6 +149,9 @@ Token Scanner::scanToken() {
             if(match('>')) return makeToken(TokenType::EQUAL_GREATER);
             else return makeToken(TokenType::EQUAL);
         }
+        case '.': {
+            if(match('.') && match('.')) return makeToken(TokenType::DOTS_3);
+        }
     }
-    return errorToken("Unexped token");
+    return errorToken("Unexpected token");
 }

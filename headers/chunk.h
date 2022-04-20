@@ -4,6 +4,14 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
+#include <map>
+
+template <typename T>
+bool has(const std::map<std::string ,T>& map, std::string val){
+    return map.find(val) != map.end();
+}
+
 
 enum OpCode {
     OP_RETURN,
@@ -24,6 +32,7 @@ enum OpCode {
     OP_SET_POINTER,
     OP_GET_POINTER,
     OP_SET_POINTER_INVERSE,
+    OP_GOTO
 };
 enum class ValueType {
     NUMBER,
@@ -73,6 +82,8 @@ struct Chunk {
 
     void write(byte val, int line);
     int addConstant(Value const_val);
+    inline size_t count(){ return  code.size(); }
+
 };
 
 

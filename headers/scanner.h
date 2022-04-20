@@ -4,11 +4,13 @@
 
 enum  class TokenType {
 // Single-character tokens.
-    DIVIDER,
+    NEW_LINE, INLINE_DIVIDER,
     MINUS, PLUS, SLASH, STAR, LEFT_PAREN, RIGHT_PAREN,
 // One or two character tokens.
     BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER,
     GREATER_EQUAL, LESS, LESS_EQUAL,  SINGLE_QUOTE, EQUAL_GREATER,
+// Three characters
+    DOTS_3,
 // Literals.
     IDENTIFIER,  NUMBER, ERROR, EOF,
 // Keywords.

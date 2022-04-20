@@ -2,6 +2,8 @@
 #define COMPILER_H
 
 
+#include <map>
+#include <string>
 #include "scanner.h"
 #include "chunk.h"
 
@@ -50,6 +52,7 @@ class Compiler {
         void errorAt(Token& token, const char *errMsg);
         void advance();
         bool match(TokenType type);
+        bool peek(TokenType type);
         void consume(TokenType type,  const char* errMsg);
 
         void synchronize();
@@ -69,9 +72,9 @@ class Compiler {
 
     void statement();
     void printStatement();
-    void expressionStatement();
-    void parsePrecedence(Precedence precedence);
-    void expression();
+    void expressionStatement(bool advanceFirst);
+    void parsePrecedence(Precedence precedence, bool advanceFirst = true);
+    void expression(bool advanceFirst = true);
     void endCompiler();
 
 
@@ -83,11 +86,14 @@ class Compiler {
     void variable();
     void pointer();
     void refer();
+    void checkLabel();
 
     //
     //ParseRule rules[50];
     static const ParseFn getPrefixFn(TokenType type);
     static const ParseRule getInfixRule(TokenType type);
+    std::map<std::string, size_t> labelMap;
+
 
 public:
     bool compile(const char* source, Chunk* chunk);

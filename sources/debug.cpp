@@ -23,6 +23,9 @@ void disassembleInstructions(const Chunk* chunk){
             OP_CASE(OP_SET_POINTER)
             OP_CASE(OP_GET_POINTER)
             OP_CASE(OP_SET_POINTER_INVERSE)
+            case OP_GOTO:
+                std::cout << "OP_GOTO :\t"  << *ip++ << std::endl;
+                break;
             case OP_CONSTANT:{
                 std::cout << "OP_CONSTANT \t";
                 chunk->constants.at(*ip++).printValue();

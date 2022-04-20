@@ -68,6 +68,9 @@ bool Compiler::Parser::match(TokenType type){
     advance();
     return true;
 }
+bool Compiler::Parser::peek(TokenType type){
+    return current.type == type;
+}
 
 
 void Compiler::Parser::advance(){
@@ -83,10 +86,12 @@ void Compiler::Parser::consume(TokenType type, const char* errMsg){
     else errorAtCurrent(errMsg);
 }
 
+
+
 void Compiler::Parser::synchronize() {
     panicMode = false;
     while (current.type != TokenType::EOF){
-        if(previous.type == TokenType::DIVIDER) return;
+        if(previous.type == TokenType::INLINE_DIVIDER || previous.type == TokenType::NEW_LINE) return;
         switch (current.type) {
             case TokenType::PRINT:
                 return;
@@ -97,8 +102,8 @@ void Compiler::Parser::synchronize() {
 }
 
 
-void Compiler::parsePrecedence(Precedence precedence) {
-    parser.advance(); // first token become parser.previous
+void Compiler::parsePrecedence(Precedence precedence, bool advanceFirst) {
+    if(advanceFirst) parser.advance(); // first token become parser.previous
     ParseFn prefixFn = getPrefixFn(parser.previous.type);
     if(prefixFn == NULL){
         parser.errorAt(parser.previous, "Expect prefix operator or literal");
@@ -124,6 +129,8 @@ void Compiler::grouping(){
     expression();
     parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
 }
+
+
 
 void Compiler::binary(){
     TokenType operatorType = parser.previous.type;
@@ -181,32 +188,57 @@ void Compiler::literal(){
     writeByte(value ? OP_TRUE : OP_FALSE);
 }
 
-void Compiler::expression() {
-    parsePrecedence(PREC_ASSIGNMENT);
+void Compiler::expression(bool advanceFirst) {
+    parsePrecedence(PREC_ASSIGNMENT, advanceFirst);
 }
-void Compiler::expressionStatement() {
-    expression();
-    while(parser.match(TokenType::DIVIDER)) ;
+void Compiler::expressionStatement(bool advanceFirst) {
+    expression(advanceFirst);
+    while ( parser.match(TokenType::INLINE_DIVIDER) ||
+            parser.match(TokenType::NEW_LINE));
     writeByte(OP_POP);
 }
 
 
 void Compiler::printStatement() {
     expression();
-    while(parser.match(TokenType::DIVIDER)) ;
+    while ( parser.match(TokenType::INLINE_DIVIDER) ||
+            parser.match(TokenType::NEW_LINE));
     writeByte(OP_PRINT);
 }
 
-
+void Compiler::checkLabel() {
+    parser.advance();
+    if(parser.previous.type == TokenType::IDENTIFIER && parser.peek(TokenType::DOTS_3))
+    {
+        std::string  labelName(parser.previous.start, parser.previous.start + parser.previous.length);
+        labelMap[labelName] = chunk->count();
+        parser.advance(); // consume ...
+        parser.advance(); // consume next token
+    }
+    else if(parser.previous.type == TokenType::IDENTIFIER && (parser.peek(TokenType::INLINE_DIVIDER) || parser.peek(TokenType::NEW_LINE) || parser.peek(TokenType::EOF))){
+        // go to line marked by this label
+        std::string  labelName(parser.previous.start, parser.previous.start + parser.previous.length);
+        if(!has(labelMap, labelName))
+            parser.errorAtCurrent("No such label");
+        else writeBytes(OP_GOTO, labelMap[labelName]);
+        while ( parser.match(TokenType::INLINE_DIVIDER) ||
+                parser.match(TokenType::NEW_LINE));
+    }
+}
 
 
 void Compiler::statement() {
-    if(parser.match(TokenType::PRINT)){
-        printStatement();
+    bool exprTokenConsumed = false;
+    if(parser.previous.type == TokenType::NEW_LINE) {
+        checkLabel();
+        if(parser.previous.type == TokenType::INLINE_DIVIDER ||
+            parser.previous.type == TokenType::NEW_LINE || parser.current.type == TokenType::EOF) return;
+
+        exprTokenConsumed = true;
     }
-    else {
-        expressionStatement();
-    }
+    if(parser.previous.type == TokenType::PRINT) printStatement();
+    else expressionStatement(!exprTokenConsumed);
+
     if(parser.panicMode) parser.synchronize();
 }
 
