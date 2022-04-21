@@ -1,0 +1,3 @@
+L{a (b) P{L} => pi} l1, l2
+L{a (b) c => pi} l1, l2
+L{a (b) c => p1, d (e) f => p2 } l1, l2

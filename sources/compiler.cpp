@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <cstdarg>
 #include "../headers/compiler.h"
 
 
@@ -14,7 +15,7 @@ const Compiler::ParseFn Compiler::getPrefixFn(TokenType type){
         case TokenType::BANG: return &Compiler::unary;
         case TokenType::IDENTIFIER: return  &Compiler::variable;
         case TokenType::SINGLE_QUOTE: return  &Compiler::pointer;
-        default: return NULL;
+        default: return nullptr;
     }
 }
 
@@ -32,7 +33,7 @@ const Compiler::ParseRule Compiler::getInfixRule(TokenType type) {
         case TokenType::BANG_EQUAL:  return {&Compiler::binary, PREC_EQUALITY};
         case TokenType::EQUAL_GREATER: return {&Compiler::refer, PREC_ASSIGNMENT};
         case TokenType::LESS_EQUAL_GREATER: return {&Compiler::exchange, PREC_ASSIGNMENT};
-        default: return {NULL, PREC_NONE};
+        default: return {nullptr, PREC_NONE};
     }
 }
 
@@ -46,73 +47,19 @@ void Compiler::endCompiler(){
     writeReturn();
 }
 
-void Compiler::Parser::errorAt(Token& token, const char *message) {
-    if(panicMode) return;
-    fprintf(stderr, "[line %d] Compiler error", token.line);
 
-    switch (token.type) {
-        case TokenType::EOF: fprintf(stderr, " at end"); break;
-        case TokenType::ERROR: break;
-        default: fprintf(stderr, " at '%.*s'", token.length, token.start);
-    }
-
-    fprintf(stderr, ": %s\n", message);
-    hadError = true;
-}
-
-void Compiler::Parser::errorAtCurrent(const char *errMsg) {
-    errorAt(current,errMsg );
-}
-
-bool Compiler::Parser::match(TokenType type){
-    if(current.type != type) return false;
-    advance();
-    return true;
-}
-bool Compiler::Parser::peek(TokenType type){
-    return current.type == type;
-}
-
-
-void Compiler::Parser::advance(){
-    previous = current;
-    while(true){
-        current = scanner.scanToken();
-        if(current.type != TokenType::ERROR) break;
-        errorAtCurrent(current.start);
-    }
-}
-void Compiler::Parser::consume(TokenType type, const char* errMsg){
-    if(current.type == type) advance();
-    else errorAtCurrent(errMsg);
-}
-
-
-
-void Compiler::Parser::synchronize() {
-    panicMode = false;
-    while (current.type != TokenType::EOF){
-        if(previous.type == TokenType::INLINE_DIVIDER || previous.type == TokenType::NEW_LINE) return;
-        switch (current.type) {
-            case TokenType::PRINT:
-                return;
-            default: ;// do nothing
-        }
-        advance();
-    }
-}
 
 
 void Compiler::parsePrecedence(Precedence precedence, bool advanceFirst) {
     if(advanceFirst) parser.advance(); // first token become parser.previous
     ParseFn prefixFn = getPrefixFn(parser.previous.type);
-    if(prefixFn == NULL){
+    if(prefixFn == nullptr){
         parser.errorAt(parser.previous, "Expect prefix operator or literal");
         return;
     }
     (this->*prefixFn)(); // stop on the next operator or at end
     // continue to consume parts with higher precedence
-    ParseRule infixRule;
+    ParseRule infixRule{};
     while ( infixRule = getInfixRule(parser.current.type), infixRule.precedence >= precedence){
         parser.advance();
         (this->*infixRule.fn)();
@@ -214,7 +161,7 @@ void Compiler::patchJump(size_t commandIdx){
 }
 
 
-void Compiler::PRStatement() {
+void Compiler::ifStatement() {
     parser.consume(TokenType::LEFT_CURLY, "Expected '{' after PR keyword.");
     expression();
     parser.consume(TokenType::RIGHT_CURLY, "Expected '}' after predicate.");
@@ -222,8 +169,7 @@ void Compiler::PRStatement() {
     size_t ifFalseJump = writeJump(OP_JUMP_IF_FALSE);
 
 
-    if(parser.current.type != TokenType::INLINE_DIVIDER && parser.current.type != TokenType::NEW_LINE &&
-       parser.current.type != TokenType::EOF && parser.current.type != TokenType::HORIZONTAL) {
+    if(!parser.currentEqual(4, TokenType::INLINE_DIVIDER, TokenType::NEW_LINE, TokenType::EOF, TokenType::HORIZONTAL)){
         do { statement();
         }while(parser.previous.type == TokenType::INLINE_DIVIDER);
     }
@@ -257,21 +203,23 @@ void Compiler::checkLabel() {
     }
 }
 
+void Compiler::loopStatement() {
+
+}
+
+
+
 
 
 void Compiler::statement() {
-    bool exprTokenConsumed = false;
-    if(parser.previous.type == TokenType::NEW_LINE) {
-        checkLabel();
-        exprTokenConsumed = true;
-    } else parser.advance();
+    if(parser.previous.type == TokenType::NEW_LINE) checkLabel();
+    else parser.advance(); // 'if' will advance one token no no matter if there was a label or not
 
     if(parser.previous.type == TokenType::B) BStatement();
-    else if(parser.previous.type == TokenType::BANG && ( parser.current.type == TokenType::HORIZONTAL ||
-        parser.current.type == TokenType::INLINE_DIVIDER || parser.current.type == TokenType::NEW_LINE || parser.current.type == TokenType::EOF))
+    else if(parser.currentEqual(4, TokenType::HORIZONTAL, TokenType::INLINE_DIVIDER, TokenType::NEW_LINE, TokenType::EOF) || parser.previous.type == TokenType::BANG )
         writeReturn();
 
-    else if(parser.previous.type == TokenType::PR) PRStatement();
+    else if(parser.previous.type == TokenType::PR) ifStatement();
     else if(parser.previous.type == TokenType::PRINT) printStatement();
     else if(parser.previous.type != TokenType::NEW_LINE) expressionStatement(false);
 

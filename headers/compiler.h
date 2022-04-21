@@ -52,10 +52,13 @@ class Compiler {
         void errorAt(Token& token, const char *errMsg);
         void advance();
         bool match(TokenType type);
-        bool peek(TokenType type);
+        bool peek(TokenType type) const;
         void consume(TokenType type,  const char* errMsg);
 
         void synchronize();
+
+        bool currentEqual(int num, ...) const;
+        bool previousEqual(int num, ...) const;
     };
 
 
@@ -71,10 +74,13 @@ class Compiler {
     void patchJump(size_t commandIdx);
 
 
+
+
     void statement();
     void printStatement();
     void BStatement();
-    void PRStatement(); // if statement
+    void ifStatement();
+    void loopStatement();
 
     void expressionStatement(bool advanceFirst);
     void parsePrecedence(Precedence precedence, bool advanceFirst = true);
