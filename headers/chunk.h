@@ -28,14 +28,15 @@ enum OpCode {
     OP_TRUE,
     OP_FALSE,
     OP_PRINT,
-    OP_POP,
+    OP_POP, //a.k.a OP_JUMP_TO_LABEL
     OP_SET_POINTER,
     OP_GET_POINTER,
     OP_SET_POINTER_INVERSE,
     OP_PART_END,
     OP_JUMP_IF_FALSE,
     OP_JUMP,
-    OP_EXCHANGE
+    OP_EXCHANGE,
+    OP_JUMP_IF_FALSE_TO_LABEL
 };
 enum class ValueType {
     NUMBER,
@@ -88,6 +89,7 @@ struct Chunk {
     std::vector<Value> constants;
 
     void write(byte val, int line);
+    void write(Chunk& chunk);
     int addConstant(Value const_val);
     inline size_t count(){ return  code.size(); }
     std::map<std::string, size_t> labelMap;

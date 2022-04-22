@@ -19,7 +19,7 @@ void Vm::runtimeError(const char* format, ...){
     va_end(args);
     fputc('\n', stderr);
 
-    size_t instruction = ip - chunk->code.begin() - 1;
+    size_t instruction = ip  - 1;
     int line = chunk->lines[instruction];
     fprintf(stderr, "[line %d] in script \n", line);
     stackCount = 0;
@@ -39,7 +39,7 @@ Value Vm::peek(size_t distance){
 }
 
 byte Vm::readByte() {
-    return *ip++;
+    return chunk->code[ip++];
 }
 Value* Vm::addToMemory(const Value& value){
     memory[memorySize++] = value;
@@ -51,7 +51,6 @@ Value* Vm::stringToPointer(std::string s){
     else return nullptr;
 }
 
-//#undef DEBUG_H
 InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
 #define CHECK_NEXT_NUMBER(pos) \
     if(peek(pos).type != ValueType::NUMBER){   \
@@ -68,13 +67,9 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                 push(Value(a op b));         \
     } while(false)
 
-#ifdef DEBUG_H
-    disassembleInstructions(chunk);
-#endif
+    for(ip = startOffset; ip < chunk->count() - endOffset && !programFinished; ){
 
-    for(ip = chunk->code.begin() + startOffset; ip != chunk->code.end() - endOffset && !programFinished; ){
-
-        switch (*ip = readByte()) {
+        switch (readByte()) {
             case OP_RETURN:
                 programFinished = true;
                 return InterpretResult::OK;
@@ -126,7 +121,25 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                 else if(v.type == ValueType::STRING) label = v.val.string;
                 else break;
                 if(!has(chunk->labelMap, label) ) break;
-                run(chunk->labelMap[label]); return InterpretResult::OK;
+                run(chunk->labelMap[label]);
+                return InterpretResult::OK;
+            }
+            case OP_JUMP_IF_FALSE_TO_LABEL: {
+                Value v = pop();
+                Value check = pop();
+                std::string label;
+                if(v.type == ValueType::NUMBER) label = std::to_string(v.val.number);
+                else if(v.type == ValueType::STRING) label = v.val.string;
+
+
+                if(isFalsey(check))
+                {
+                    if(!has(chunk->labelMap, label)) {
+                        return InterpretResult::RUNTIME_ERROR;
+                    }
+                    run(chunk->labelMap[label]); return InterpretResult::OK;
+                }
+                break;
             }
             case OP_SET_POINTER:
                 if(setPointer(false) == InterpretResult::RUNTIME_ERROR)
@@ -248,10 +261,15 @@ InterpretResult Vm::setPointer(bool inverse){
     return InterpretResult::OK;
 }
 
-
+#undef DEBUG_H
 InterpretResult Vm::interpret(const char *source) {
     Chunk codeChunk;
     if(!compiler.compile(source, &codeChunk)) return InterpretResult::COMPILE_ERROR;
+    this->chunk = &codeChunk;
+#ifdef DEBUG_H
+    disassembleInstructions(chunk);
+#endif
+
     this->chunk = &codeChunk;
     programFinished = false;
     InterpretResult result = run();

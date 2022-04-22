@@ -7,6 +7,7 @@
 #include "chunk.h"
 #include "compiler.h"
 
+
 enum class InterpretResult {
     OK,
     COMPILE_ERROR,
@@ -17,14 +18,15 @@ enum class InterpretResult {
 class Vm {
 
     Chunk* chunk{NULL};
-    std::vector<byte>::iterator ip;
+    size_t ip;
 
     Value stack[STACK_MAX];
     size_t stackCount{0};
     Value memory[STACK_MAX];
     size_t memorySize{0};
 
-    Compiler compiler;
+    Compiler::Parser p;
+    Compiler compiler{p};
     std::map<std::string , Value*> pMap;
 
     void runtimeError(const char* format, ...);

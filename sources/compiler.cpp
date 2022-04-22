@@ -197,29 +197,29 @@ void Compiler::checkLabel() {
     if(parser.previous.type == TokenType::IDENTIFIER && parser.peek(TokenType::DOTS_3))
     {
         std::string  labelName(parser.previous.start, parser.previous.start + parser.previous.length);
-        chunk->labelMap[labelName] = chunk->count();
+        addLabel(labelName);
         parser.advance(); // consume ...
         parser.advance(); // consume next token
     }
 }
 
-void Compiler::loopStatement() {
-
+void Compiler::addLabel(std::string labelName) {
+    chunk->labelMap[labelName] = chunk->count();
 }
-
-
-
-
 
 void Compiler::statement() {
     if(parser.previous.type == TokenType::NEW_LINE) checkLabel();
     else parser.advance(); // 'if' will advance one token no no matter if there was a label or not
 
     if(parser.previous.type == TokenType::B) BStatement();
-    else if(parser.currentEqual(4, TokenType::HORIZONTAL, TokenType::INLINE_DIVIDER, TokenType::NEW_LINE, TokenType::EOF) || parser.previous.type == TokenType::BANG )
+    else if(
+           // parser.currentEqual(4, TokenType::HORIZONTAL, TokenType::INLINE_DIVIDER, TokenType::NEW_LINE, TokenType::EOF) ||
+            parser.previous.type == TokenType::BANG )
         writeReturn();
 
     else if(parser.previous.type == TokenType::PR) ifStatement();
+    else if(parser.previous.type ==  TokenType::B) BStatement();
+    else if(parser.previous.type ==  TokenType::L) loopStatement();
     else if(parser.previous.type == TokenType::PRINT) printStatement();
     else if(parser.previous.type != TokenType::NEW_LINE) expressionStatement(false);
 
@@ -231,18 +231,7 @@ void Compiler::statement() {
 
 
 
-bool Compiler::compile(const char*source, Chunk* chunk){
-    parser.scanner.init(source);
-    this->chunk = chunk;
-    parser.hadError = false;
-    parser.panicMode = false;
 
-
-    parser.advance(); // first token become parser.previous
-    while(!parser.match(TokenType::EOF)) statement();
-    endCompiler();
-    return !parser.hadError;
-}
 
 void Compiler::writeByte(byte byte1) {
     chunk->write(byte1, parser.previous.line);
@@ -280,4 +269,8 @@ void Compiler::refer() {
 void Compiler::exchange() {
     parsePrecedence((Precedence)((int)Precedence::PREC_ASSIGNMENT + 1));
     writeByte(OP_EXCHANGE);
+}
+
+void Compiler::write(Chunk &tchunk) {
+    chunk->write(tchunk);
 }

@@ -1,11 +1,18 @@
 #include <cstdio>
 #include <iostream>
 #include "../headers/debug.h"
-
+using namespace std;
 void disassembleInstructions(const Chunk* chunk){
-#define OP_CASE(name)  case(name): {std::cout << #name << '\n'; break;}
-    for(auto ip = chunk->code.begin(); ip != chunk->code.end(); ){
-        switch (*ip++) {
+    cout << "Labels:" << endl;
+    for(auto i = chunk->labelMap.begin(); i != chunk->labelMap.end(); i++){
+        cout << i->first << ":\t" << i->second << endl;
+    }
+
+    cout << " ---" << endl;
+#define OP_CASE(name)  case(name): {cout << #name << '\n'; break;}
+    for(int i = 0; i < chunk->code.size(); i++){
+        cout << '[' << i << "]\t";
+        switch (chunk->code[i]) {
             OP_CASE(OP_RETURN)
             OP_CASE(OP_NEGATE)
             OP_CASE(OP_ADD)
@@ -25,21 +32,22 @@ void disassembleInstructions(const Chunk* chunk){
             OP_CASE(OP_SET_POINTER_INVERSE)
             OP_CASE(OP_PART_END)
             OP_CASE(OP_EXCHANGE)
+            OP_CASE(OP_JUMP_IF_FALSE_TO_LABEL)
             case OP_JUMP_IF_FALSE:
             case OP_JUMP: {
-                std::cout << "OP_JUMP ";
-                if((OpCode)*(ip-1) == OP_JUMP_IF_FALSE) std::cout << "if false ";
-                std::cout << (size_t)*ip++ ;
-                std::cout << std::endl;
+                cout << "OP_JUMP ";
+                if((OpCode)chunk->code[i] == OP_JUMP_IF_FALSE) cout << "if false ";
+                cout << (size_t)chunk->code[++i] ;
+                cout << endl;
                 break;
             }
             case OP_CONSTANT:{
-                std::cout << "OP_CONSTANT \t";
-                chunk->constants.at(*ip++).printValue();
-                std::cout << std::endl;
+                cout << "OP_CONSTANT \t";
+                chunk->constants.at(chunk->code[++i]).printValue();
+                cout << endl;
                 break;
             }
-            default: std::cout << "Unknown OP :\t"  << *(ip-1) << std::endl;;
+            default: cout << "Unknown OP :\t"  << chunk->code[i] << endl;;
         }
     }
 #undef OP_CASE

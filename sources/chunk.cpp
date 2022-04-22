@@ -6,7 +6,18 @@ void Chunk::write(byte val, int line) {
     lines.push_back(line);
     code.push_back(val);
 }
-
+void Chunk::write(Chunk& chunk) {
+    for(int i=0; i< chunk.count(); i++) {
+        lines.push_back(chunk.lines[i]);
+        code.push_back(chunk.code[i]);
+        if(chunk.code[i] == OP_CONSTANT)
+        {
+            i++;
+            constants.push_back(chunk.constants[chunk.code[i]]);
+            code.push_back(constants.size() - 1);
+        }
+    }
+}
 
 int Chunk::addConstant(Value const_val) {
     constants.push_back(const_val);

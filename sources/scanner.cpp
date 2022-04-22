@@ -107,6 +107,10 @@ TokenType Scanner::checkKeyword(const char* with, TokenType type){
 TokenType Scanner::identifierType(){
     //TODO: check for keywords.
     switch (*start) {
+        case 'B':
+            return checkKeyword("B", TokenType::B);
+        case 'L':
+            return checkKeyword("L", TokenType::L);
         case 'P':
             return checkKeyword("PR", TokenType::PR);
         case 't':
@@ -130,7 +134,6 @@ Token Scanner::scanToken() {
     if(isAtEnd()) return makeToken(TokenType::EOF);
     char c = advance();
     if(isDigit(c)) return number();
-    if(c == 'B' && !isAlpha(peekNext())) return makeToken(TokenType::B);
     if(isAlpha(c)) return identifier();
     switch (c) {
         case '\n': line++; return makeToken(TokenType::NEW_LINE);
@@ -155,6 +158,7 @@ Token Scanner::scanToken() {
         }
         case '.': {
             if(match('.') && match('.')) return makeToken(TokenType::DOTS_3);
+            else return makeToken(TokenType::DOT);
         }
         case '<': {
             if(match('=')){

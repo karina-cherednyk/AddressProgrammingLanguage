@@ -8,39 +8,9 @@
 #include "chunk.h"
 
 
+
 class Compiler {
-
-    enum Precedence {
-        PREC_NONE, PREC_ASSIGNMENT, PREC_OR, PREC_AND,
-        PREC_EQUALITY, PREC_COMPARISON, PREC_TERM, PREC_FACTOR,
-        PREC_UNARY, PREC_PRIMARY
-    };
-
-    typedef void (Compiler::*ParseFn)();
-    struct ParseRule {
-        ParseFn fn;
-        Precedence precedence;
-    };
-
-    /*
-     * statement -> exprStatement | printStatement
-     * */
-    /*
-     * expression -> assignment
-     * assignment -> address_assignment | value_assignment
-     * address_assignment -> ??
-     * value_assignment = (IDENTIFIER '=' assignment) | or
-     * or = and ( 'or' and )*
-     * and = eq ( 'and' eq )*
-     * eq = comp (  ('=='|'!=') comp )*
-     * comp = term ( ('>'|'>='|'<'|'<=') term )*
-     * term = factor ( ('+'|'-') factor )*
-     * factor = unary ( '*'|'/' unary )*
-     * unary = ('-'|'!') primary
-     * primary = 'true' | 'false' | NUMBER | IDENTIFIER | '(' expression ')'
-     * */
-
-
+public:
     struct Parser {
         Token current;
         Token previous;
@@ -61,13 +31,33 @@ class Compiler {
         bool previousEqual(int num, ...) const;
     };
 
+    inline Compiler(Parser& p): parser(p){}
+
+private:
+
+    enum Precedence {
+        PREC_NONE, PREC_ASSIGNMENT, PREC_OR, PREC_AND,
+        PREC_EQUALITY, PREC_COMPARISON, PREC_TERM, PREC_FACTOR,
+        PREC_UNARY, PREC_PRIMARY
+    };
+
+    typedef void (Compiler::*ParseFn)();
+    struct ParseRule {
+        ParseFn fn;
+        Precedence precedence;
+    };
+
+    /*
+     * statement -> exprStatement | printStatement
+     * */
 
 
-    Parser parser;
+    Parser& parser;
     Chunk* chunk;
 
     void writeByte(byte byte1);
     void writeBytes(byte byte1, byte byte2);
+    void write(Chunk& chunk);
     void writeConstant(Value value);
     void writeReturn();
     size_t writeJump(byte command);
@@ -87,6 +77,7 @@ class Compiler {
     void expression(bool advanceFirst = true);
     void endCompiler();
     void checkLabel();
+    void addLabel(std::string labelName);
 
     void binary();
     void grouping();
@@ -108,6 +99,26 @@ class Compiler {
 
 public:
     bool compile(const char* source, Chunk* chunk);
+    bool compileExpression(Chunk* chunk);
+    void compileUntil(std::string label);
+
+/*
+ * expression -> assignment
+ * assignment -> address_assignment | value_assignment
+ * address_assignment -> ??
+ * value_assignment = (IDENTIFIER '=' assignment) | or
+ * or = and ( 'or' and )*
+ * and = eq ( 'and' eq )*
+ * eq = comp (  ('=='|'!=') comp )*
+ * comp = term ( ('>'|'>='|'<'|'<=') term )*
+ * term = factor ( ('+'|'-') factor )*
+ * factor = unary ( '*'|'/' unary )*
+ * unary = ('-'|'!') primary
+ * primary = 'true' | 'false' | NUMBER | IDENTIFIER | '(' expression ')'
+ * */
+
+
+
 };
 
 

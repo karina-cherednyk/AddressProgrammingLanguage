@@ -1,0 +1,34 @@
+L{1 (1) 3. => pi} l1, l2
+print 'pi
+l1
+l2 ...
+
+
+Labels:
+l1:     8
+l2:     34
+ ---
+[0]     OP_CONSTANT     1
+[2]     OP_CONSTANT     pi
+[4]     OP_SET_POINTER_INVERSE
+[5]     OP_POP
+[6]     OP_JUMP 9
+[8]     OP_CONSTANT     pi
+[10]    OP_CONSTANT     pi
+[12]    OP_GET_POINTER
+[13]    OP_CONSTANT     1
+[15]    OP_ADD
+[16]    OP_SET_POINTER
+[17]    OP_CONSTANT     pi
+[19]    OP_GET_POINTER
+[20]    OP_CONSTANT     3
+[22]    OP_EQUAL
+[23]    OP_NOT
+[24]    OP_CONSTANT     l2
+[26]    OP_JUMP_IF_FALSE_TO_LABEL
+[27]    OP_CONSTANT     pi
+[29]    OP_GET_POINTER
+[30]    OP_PRINT
+[31]    OP_CONSTANT     l1
+[33]    OP_POP
+[34]    OP_RETURN

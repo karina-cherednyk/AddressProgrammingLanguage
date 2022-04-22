@@ -1,0 +1,49 @@
+    //STACK:
+    /*
+     * a a2
+     * b b2
+     * c c2
+     * pi, pi2
+     * l1
+     * l2
+     */
+    // POP EVERYTHING (6)
+/*   START_LOOP(a,b,c,pi, l1, l2, code*)
+     a => pi or *pi = a
+     k ..P{pi != c } | l2
+     body
+     *pi = *pi + b
+     k
+     ...
+     l2
+     ----
+     for({a .. an}, {pi .. pin):
+     OP_PUSH PI
+     OP_PUSH a
+     OP_SET
+     OP_POP
+     memorize k label
+
+     for({P{L} ... P{Ln})
+    ---- if P{L}
+     expression()
+     --- if c
+     OP_PUSH pi
+     OP_GET
+     OP_PUSH c
+     OP_NOT_EQUAL
+     ---
+     OP_JUMP_IF_FALSE   l2
+     do statement() until parser.previous = l1
+
+     for({b .. bn}, {pi .. pin})
+     OP_PUSH pi
+     OP_PUSH b
+     OP_ADD_TO_P_VALUE
+     OP_POP
+
+
+     k
+     OP_POP
+
+ */
