@@ -99,7 +99,8 @@ private:
 
 public:
     bool compile(const char* source, Chunk* chunk);
-    bool compileExpression(Chunk* chunk);
+    void compileExpression(Chunk* chunk);
+    void compileConditionExpression(Chunk* chunk);
     void compileUntil(std::string label);
 
 /*

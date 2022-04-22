@@ -1,13 +1,17 @@
 #include "../headers/compiler.h"
 
 
-bool Compiler::compileExpression(Chunk* chunk){
+void Compiler::compileExpression(Chunk* chunk){
     this->chunk = chunk;
-    parser.hadError = false;
     expression();
-    parser.panicMode = false;
-    return !parser.hadError;
 }
+void Compiler::compileConditionExpression(Chunk* chunk){
+    this->chunk = chunk;
+    parser.consume(TokenType::LEFT_CURLY, "Expected '{' after PR keyword.");
+    expression();
+    parser.consume(TokenType::RIGHT_CURLY, "Expected '}' after predicate.");
+}
+
 bool Compiler::compile(const char*source, Chunk* chunk){
     parser.scanner.init(source);
     this->chunk = chunk;
@@ -33,17 +37,38 @@ void Compiler::compileUntil(std::string label){
 
 void Compiler::loopStatement() {
     Compiler innerComp{parser};
-    Chunk initialization, step, end, parameter, l1, l2;
+    Chunk initialization, step, end, endCondition, parameter, l1, l2;
 
     parser.consume(TokenType::LEFT_CURLY, "Expected '{' before loop declaration.");
+
+    //initialization part
     innerComp.compileExpression( &initialization);
+
+    // step part
     parser.consume(TokenType::LEFT_PAREN, "Expected '('.");
     innerComp.compileExpression( &step);
     parser.consume(TokenType::RIGHT_PAREN, "Expected ')'.");
-    innerComp.compileExpression( &end);
+
+    // condition part
+    bool isCondExpression = parser.match(TokenType::PR);
+    if(isCondExpression){
+        innerComp.compileConditionExpression(&end);
+        endCondition = end;
+    } else innerComp.compileExpression(&end);
+
+    //parameter part
     parser.consume(TokenType::DOT, "Expected '.'.");
     parser.consume(TokenType::EQUAL_GREATER, "Expected '=>'.");
     innerComp.compileExpression( &parameter);
+    if(!isCondExpression){ // patch the condition
+        endCondition.write(parameter);
+        endCondition.write(OP_GET_POINTER, parser.current.line);
+        endCondition.write(end);
+        endCondition.write(OP_EQUAL, parser.current.line);
+        endCondition.write(OP_NOT, parser.current.line);
+    }
+
+
     parser.consume(TokenType::RIGHT_CURLY, "Expected '}' after loop declaration.");
     innerComp.compileExpression( &l1);
     parser.consume(TokenType::INLINE_DIVIDER, "Expected ','");
@@ -68,10 +93,7 @@ void Compiler::loopStatement() {
 
     patchJump(skipFirstIncrementJump);
     // condition
-    write(parameter);
-    writeByte(OP_GET_POINTER);
-    write(end);
-    writeBytes(OP_EQUAL, OP_NOT);
+    write(endCondition);
     write(l2);
     writeByte(OP_JUMP_IF_FALSE_TO_LABEL);
 
