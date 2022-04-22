@@ -95,8 +95,11 @@ private:
     static const ParseFn getPrefixFn(TokenType type);
     static const ParseRule getInfixRule(TokenType type);
 
+    struct ForLoopParts{
+        Chunk initialization, step, endCondition, parameter;
+    };
 
-
+    ForLoopParts parseForLoopParts();
 public:
     bool compile(const char* source, Chunk* chunk);
     void compileExpression(Chunk* chunk);

@@ -1,4 +1,5 @@
-L{1 (1) PR{'pi != 10} .=> pi} l1, l2
+L{1 (0) PR{'pi <= 10} .=> pi} l1, l2
 print 'pi
+'pi = 'pi + 3
 l1
 l2 ...
