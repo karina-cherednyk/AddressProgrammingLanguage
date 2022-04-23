@@ -72,6 +72,11 @@ void Compiler::writeConstant(Value value){
     writeBytes(OP_CONSTANT, (byte) constant_position);
 }
 
+void Compiler::writeString(std::string s){
+    const char* str = addString(s.c_str(), s.size());
+    writeConstant(Value(str));
+}
+
 
 void Compiler::grouping(){
     expression();

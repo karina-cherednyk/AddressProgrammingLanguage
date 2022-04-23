@@ -36,14 +36,14 @@ class Vm {
     void push(Value value);
     Value pop();
     Value peek(size_t distance);
-    InterpretResult setPointer(bool inverse);
+    InterpretResult setPointer(bool inverse, bool push);
     InterpretResult getPointer();
     Value* stringToPointer(std::string s);
 
     static bool isFalsey(Value value);
     Value* addToMemory(const Value& value);
 
-    InterpretResult run(size_t startOffset = 0, size_t endOffset = 0);
+    InterpretResult run();
     bool programFinished =  false;
 
 public:

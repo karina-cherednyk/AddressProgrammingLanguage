@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cassert>
+#include <iostream>
 #include "../headers/chunk.h"
 
 void Chunk::write(byte val, int line) {
@@ -25,17 +26,20 @@ int Chunk::addConstant(Value const_val) {
 }
 
 void Value::printValue() const{
+    std::cout << std::string(*this);
+}
+ Value::operator std::string() const{
     switch (type) {
         case ValueType::NUMBER:
-            printf("%g", val.number); break;
+            return std::to_string(val.number);
         case ValueType::BOXED:
-            val.pointTo->printValue(); break;
+            return std::string(*val.pointTo);
         case ValueType::STRING:
-            printf("%s", val.string); break;
+            return val.string;
         case ValueType::BOOL:
-            printf("%s", val.boolean ? "true" : "false"); break;
+            return  (val.boolean ? "true" : "false");
         case ValueType::POINTER:
-            printf("Pointer to :\t"); val.pointTo->printValue(); break;
+            return ("Pointer to :\t") + std::string(*val.pointTo);
     }
 }
 
@@ -57,6 +61,11 @@ const char* addString(const char* start, int length){
     strings.push_back(newStr);
     return newStr;
 }
+
+const char* addString(const char* start){
+    return addString(start, strlen(start));
+}
+
 #define DOUBLE_MAX_LEN  30
 const char* addNumString(double value){
     char* newStr = new char[DOUBLE_MAX_LEN];

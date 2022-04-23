@@ -1,0 +1,85 @@
+L{1(1)10 .=> pi1, 1(1)10 .=> pi2} l1, l2
+print 'pi2
+l1
+l2 ...
+
+
+Labels:
+_cond_0_0.0:    64
+_cond_0_1.0:    77
+_cond_0_2:      90
+_incr_0_0.0:    40
+_incr_0_1.0:    52
+_init_0_0.0:    0
+_init_0_1.0:    20
+l2:     101
+ ---
+[0]     OP_CONSTANT     pi1
+[2]     OP_CONSTANT     1.000000
+[4]     OP_SET_POINTER_WITHOUT_PUSH
+[5]     OP_CONSTANT     _cond_0_0
+[7]     OP_CONSTANT     _cond_0_0.0
+[9]     OP_GET_LABEL
+[10]    OP_SET_POINTER_WITHOUT_PUSH
+[11]    OP_CONSTANT     l1
+[13]    OP_CONSTANT     _incr_0_0.0
+[15]    OP_GET_LABEL
+[16]    OP_SET_POINTER_WITHOUT_PUSH
+[17]    OP_CONSTANT     _init_0_1.0
+[19]    OP_POP
+[20]    OP_CONSTANT     pi2
+[22]    OP_CONSTANT     2.000000
+[24]    OP_SET_POINTER_WITHOUT_PUSH
+[25]    OP_CONSTANT     _cond_0_1
+[27]    OP_CONSTANT     _cond_0_1.0
+[29]    OP_GET_LABEL
+[30]    OP_SET_POINTER_WITHOUT_PUSH
+[31]    OP_CONSTANT     _incr_0_1
+[33]    OP_CONSTANT     _incr_0_1.0
+[35]    OP_GET_LABEL
+[36]    OP_SET_POINTER_WITHOUT_PUSH
+[37]    OP_CONSTANT     _cond_0_0
+[39]    OP_POP
+[40]    OP_CONSTANT     pi1
+[42]    OP_CONSTANT     pi1
+[44]    OP_GET_POINTER
+[45]    OP_CONSTANT     1.000000
+[47]    OP_ADD
+[48]    OP_SET_POINTER_WITHOUT_PUSH
+[49]    OP_CONSTANT     _incr_0_1
+[51]    OP_POP
+[52]    OP_CONSTANT     pi2
+[54]    OP_CONSTANT     pi2
+[56]    OP_GET_POINTER
+[57]    OP_CONSTANT     1.000000
+[59]    OP_ADD
+[60]    OP_SET_POINTER_WITHOUT_PUSH
+[61]    OP_CONSTANT     _cond_0_0
+[63]    OP_POP
+[64]    OP_CONSTANT     pi1
+[66]    OP_GET_POINTER
+[67]    OP_CONSTANT     3.000000
+[69]    OP_EQUAL
+[70]    OP_NOT
+[71]    OP_CONSTANT     l2
+[73]    OP_JUMP_IF_FALSE_TO_LABEL
+[74]    OP_CONSTANT     _cond_0_1
+[76]    OP_POP
+[77]    OP_CONSTANT     pi2
+[79]    OP_GET_POINTER
+[80]    OP_CONSTANT     4.000000
+[82]    OP_EQUAL
+[83]    OP_NOT
+[84]    OP_CONSTANT     l2
+[86]    OP_JUMP_IF_FALSE_TO_LABEL
+[87]    OP_CONSTANT     _cond_0_2
+[89]    OP_POP
+[90]    OP_CONSTANT     pi
+[92]    OP_GET_POINTER
+[93]    OP_CONSTANT     pi2
+[95]    OP_GET_POINTER
+[96]    OP_ADD
+[97]    OP_PRINT
+[98]    OP_CONSTANT     l1
+[100]   OP_POP
+[101]   OP_RETURN

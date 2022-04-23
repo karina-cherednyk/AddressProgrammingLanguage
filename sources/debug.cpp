@@ -33,6 +33,8 @@ void disassembleInstructions(const Chunk* chunk){
             OP_CASE(OP_PART_END)
             OP_CASE(OP_EXCHANGE)
             OP_CASE(OP_JUMP_IF_FALSE_TO_LABEL)
+            OP_CASE(OP_GET_LABEL)
+            OP_CASE(OP_SET_POINTER_WITHOUT_PUSH)
             case OP_JUMP_IF_FALSE:
             case OP_JUMP: {
                 cout << "OP_JUMP ";

@@ -59,6 +59,7 @@ private:
     void writeBytes(byte byte1, byte byte2);
     void write(Chunk& chunk);
     void writeConstant(Value value);
+    void writeString(std::string s);
     void writeReturn();
     size_t writeJump(byte command);
     void patchJump(size_t commandIdx);
@@ -96,10 +97,20 @@ private:
     static const ParseRule getInfixRule(TokenType type);
 
     struct ForLoopParts{
+        static int initLabel;
         Chunk initialization, step, endCondition, parameter;
+        ForLoopParts* nextPart{nullptr};
+        int num;
+        inline ForLoopParts():num(initLabel++){};
+        inline ~ForLoopParts(){
+            delete nextPart;
+        }
     };
 
-    ForLoopParts parseForLoopParts();
+    void parseForLoopParts(ForLoopParts* parts);
+    void writeInitPart(const std::vector<ForLoopParts*>& forLoopParts, std::string l1, int forLoopNumber);
+    void writeIncrementPart(const std::vector<ForLoopParts*>& forLoopParts, int forLoopNumber);
+    void writeConditionPart(const std::vector<ForLoopParts*>& forLoopParts, std::string  l2, int forLoopNumber);
 public:
     bool compile(const char* source, Chunk* chunk);
     void compileExpression(Chunk* chunk);

@@ -30,13 +30,15 @@ enum OpCode {
     OP_PRINT,
     OP_POP, //a.k.a OP_JUMP_TO_LABEL
     OP_SET_POINTER,
+    OP_SET_POINTER_WITHOUT_PUSH,
     OP_GET_POINTER,
     OP_SET_POINTER_INVERSE,
     OP_PART_END,
     OP_JUMP_IF_FALSE,
     OP_JUMP,
     OP_EXCHANGE,
-    OP_JUMP_IF_FALSE_TO_LABEL
+    OP_JUMP_IF_FALSE_TO_LABEL,
+    OP_GET_LABEL
 };
 enum class ValueType {
     NUMBER,
@@ -73,13 +75,14 @@ struct Value {
     inline explicit Value():type{ValueType::POINTER}, val({.pointTo = nullptr}) {};
     bool operator== (const Value& other) const;
     void printValue() const;
-
+    explicit operator std::string() const;
 };
 
 //typedef double Value;
 
 
 const char* addString(const char* start, int length);
+const char* addString(const char* start);
 const char* addNumString(double value);
 void freeStrings();
 

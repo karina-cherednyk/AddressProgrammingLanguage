@@ -51,7 +51,7 @@ Value* Vm::stringToPointer(std::string s){
     else return nullptr;
 }
 
-InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
+InterpretResult Vm::run() {
 #define CHECK_NEXT_NUMBER(pos) \
     if(peek(pos).type != ValueType::NUMBER){   \
         runtimeError("Expected number.");      \
@@ -67,7 +67,7 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                 push(Value(a op b));         \
     } while(false)
 
-    for(ip = startOffset; ip < chunk->count() - endOffset && !programFinished; ){
+    for(ip = 0; ip < chunk->count() - 0 && !programFinished; ){
 
         switch (readByte()) {
             case OP_RETURN:
@@ -120,10 +120,11 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                 if(v.type == ValueType::NUMBER) label = std::to_string(v.val.number);
                 else if(v.type == ValueType::STRING) label = v.val.string;
                 else break;
-                if(!has(chunk->labelMap, label) ) break;
-                run(chunk->labelMap[label]);
-                return InterpretResult::OK;
+                if(has(chunk->labelMap, label) ) ip = chunk->labelMap[label];
+                else if(has(pMap, label) && pMap[label]->val.pointTo->type == ValueType::NUMBER) ip = pMap[label]->val.pointTo->val.number;
+                break;
             }
+
             case OP_JUMP_IF_FALSE_TO_LABEL: {
                 Value v = pop();
                 Value check = pop();
@@ -137,18 +138,28 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                     if(!has(chunk->labelMap, label)) {
                         return InterpretResult::RUNTIME_ERROR;
                     }
-                    run(chunk->labelMap[label]); return InterpretResult::OK;
+                    ip = chunk->labelMap[label];
                 }
                 break;
             }
+            case OP_GET_LABEL: {
+                Value v = pop();
+                if(v.type != ValueType::STRING){ runtimeError("Expected label got %s", std::string(v).c_str()); return InterpretResult::RUNTIME_ERROR;}
+                if(!has(chunk->labelMap, v.val.string)){ runtimeError("No such label %s", v.val.string); return InterpretResult::RUNTIME_ERROR;}
+                push(Value((double)chunk->labelMap[v.val.string]));
+                break;
+            }
             case OP_SET_POINTER:
-                if(setPointer(false) == InterpretResult::RUNTIME_ERROR)
+                if(setPointer(false, true) == InterpretResult::RUNTIME_ERROR)
+                    return InterpretResult::RUNTIME_ERROR; break;
+            case OP_SET_POINTER_WITHOUT_PUSH:
+                if(setPointer(false, false) == InterpretResult::RUNTIME_ERROR)
                     return InterpretResult::RUNTIME_ERROR; break;
             case OP_GET_POINTER:
                 if(getPointer() == InterpretResult::RUNTIME_ERROR)
                     return InterpretResult::RUNTIME_ERROR; break;
             case OP_SET_POINTER_INVERSE:
-                if(setPointer(true) == InterpretResult::RUNTIME_ERROR)
+                if(setPointer(true, true) == InterpretResult::RUNTIME_ERROR)
                     return InterpretResult::RUNTIME_ERROR; break;
             case OP_CONSTANT:
                 push(chunk->constants[readByte()]); break;
@@ -203,6 +214,8 @@ InterpretResult Vm::run(size_t startOffset, size_t endOffset) {
                 break;
             }
             case OP_PART_END: return InterpretResult::OK;
+            default:
+                assert(false);
         }
     }
     runtimeError("No return statement");
@@ -222,7 +235,7 @@ InterpretResult Vm::getPointer(){
     return InterpretResult::OK;
 }
 
-InterpretResult Vm::setPointer(bool inverse){
+InterpretResult Vm::setPointer(bool inverse, bool ispush){
     Value pointee, pointer;
     if(inverse) pointer = pop(), pointee = pop();
     else pointee = pop(), pointer = pop();
@@ -257,23 +270,22 @@ InterpretResult Vm::setPointer(bool inverse){
     } else
         assert(false);
 
-    push(pointee);
+    if(ispush)
+        push(pointee);
     return InterpretResult::OK;
 }
 
-#undef DEBUG_H
+//#undef DEBUG_H
 InterpretResult Vm::interpret(const char *source) {
     Chunk codeChunk;
     if(!compiler.compile(source, &codeChunk)) return InterpretResult::COMPILE_ERROR;
     this->chunk = &codeChunk;
 #ifdef DEBUG_H
-    disassembleInstructions(chunk);
+    disassembleInstructions(this->chunk);
 #endif
-
-    this->chunk = &codeChunk;
     programFinished = false;
     InterpretResult result = run();
-    this->chunk = NULL;
+    this->chunk = nullptr;
     return result;
 }
 
