@@ -48,6 +48,7 @@ void Compiler::Parser::errorAtCurrent(const char *errMsg) {
 
 bool Compiler::Parser::match(TokenType type){
     if(current.type != type) return false;
+    if(type == TokenType::EOF) return true;
     advance();
     return true;
 }

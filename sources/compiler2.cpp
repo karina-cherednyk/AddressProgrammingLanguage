@@ -4,7 +4,7 @@ using namespace std;
 
 void Compiler::compileExpression(Chunk* chunk){
     this->chunk = chunk;
-    expression();
+    parsePrecedence( (Precedence)(Precedence::PREC_ASSIGNMENT + 1));
 }
 void Compiler::compileConditionExpression(Chunk* chunk){
     this->chunk = chunk;
@@ -55,14 +55,13 @@ void Compiler::parseForLoopParts(ForLoopParts* parts){
     } else compileExpression(&end);
 
     //parameter part
-    if(!parser.match(TokenType::DOT)){
+    if(!parser.match(TokenType::EQUAL_GREATER)){
         parts->nextPart = new ForLoopParts;
-        parser.consume(TokenType::INLINE_DIVIDER, "Expected either '.=>' or ','.");
+        parser.consume(TokenType::INLINE_DIVIDER, "Expected either '=>' or ','.");
         parseForLoopParts(parts->nextPart);
         parts->parameter = parts->nextPart->parameter;
     }
     else {
-        parser.consume(TokenType::EQUAL_GREATER, "Expected '=>'.");
         compileExpression( &parts->parameter);
     }
 

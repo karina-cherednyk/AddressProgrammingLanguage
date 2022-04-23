@@ -216,17 +216,17 @@ void Compiler::statement() {
     if(parser.previous.type == TokenType::NEW_LINE) checkLabel();
     else parser.advance(); // 'if' will advance one token no no matter if there was a label or not
 
-    if(parser.previous.type == TokenType::B) BStatement();
-    else if(
-           // parser.currentEqual(4, TokenType::HORIZONTAL, TokenType::INLINE_DIVIDER, TokenType::NEW_LINE, TokenType::EOF) ||
-            parser.previous.type == TokenType::BANG )
-        writeReturn();
-
-    else if(parser.previous.type == TokenType::PR) ifStatement();
-    else if(parser.previous.type ==  TokenType::B) BStatement();
-    else if(parser.previous.type ==  TokenType::L) loopStatement();
-    else if(parser.previous.type == TokenType::PRINT) printStatement();
-    else if(parser.previous.type != TokenType::NEW_LINE) expressionStatement(false);
+    switch (parser.previous.type) {
+        case TokenType::B: BStatement(); break;
+        case TokenType::BANG: writeReturn(); return;
+        case TokenType::PR: ifStatement(); break;
+        case TokenType::L: loopStatement(); break;
+        case TokenType::PRINT: printStatement(); break;
+        case TokenType::EOF: return;
+        case TokenType::NEW_LINE: break;
+        default:
+            expressionStatement(false);
+    }
 
     while ( parser.match(TokenType::INLINE_DIVIDER) ||
             parser.match(TokenType::NEW_LINE));
