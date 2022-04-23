@@ -15,7 +15,7 @@ Token replace(const std::vector<ReplaceTokens>& tokens, const Token& t2){
                 if (t1.start[i] != t2.start[i]) matching = false;
             }
             if(matching) return pair.with;
-        }
+        } else return pair.with;
     }
     return t2;
 }
