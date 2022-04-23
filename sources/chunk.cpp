@@ -41,6 +41,7 @@ void Value::printValue() const{
         case ValueType::POINTER:
             return ("Pointer to :\t") + std::string(*val.pointTo);
     }
+     return "";
 }
 
 bool Value::operator==(const Value &other) const {

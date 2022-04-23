@@ -1,0 +1,6 @@
+'a = 10, 'b = 9
+l1... 'a = 3
+l2...
+R{a->b}l1,l2
+print a
+print b

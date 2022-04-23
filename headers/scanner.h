@@ -1,14 +1,18 @@
 #ifndef SCANNER_H
 #define SCANNER_H
+
+#include <map>
+#include <vector>
+
 #undef EOF
 
 enum  class TokenType {
 // Single-character tokens.
     NEW_LINE, INLINE_DIVIDER,
-    MINUS, PLUS, SLASH, STAR, L,DOT,
+    MINUS, PLUS, SLASH, STAR, L,DOT, R,
     LEFT_PAREN, RIGHT_PAREN, B, LEFT_CURLY, RIGHT_CURLY, HORIZONTAL,
 // One or two character tokens.
-    BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER,
+    BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER, MINUS_GREATER,
     GREATER_EQUAL, LESS, LESS_EQUAL,  SINGLE_QUOTE, EQUAL_GREATER,
 // Three characters
     DOTS_3, LESS_EQUAL_GREATER,
@@ -29,12 +33,18 @@ struct Token {
     int line{-1};
 };
 
+struct ReplaceTokens {
+    Token what;
+    Token with;
+};
+
 class Scanner {
 
 
     const char* start;
     const char* current;
     int line;
+
 
     Token makeToken(TokenType type);
     char advance();
@@ -49,9 +59,10 @@ class Scanner {
     TokenType checkKeyword(const char* with, TokenType type);
     TokenType identifierType();
     Token identifier();
-
+    Token scanTokenInner();
 
 public:
+    std::vector<ReplaceTokens> replacements;
     Scanner();
     void init(const char* source);
     bool isAtEnd();

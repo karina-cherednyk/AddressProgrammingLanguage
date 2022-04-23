@@ -11,6 +11,8 @@
 
 class Compiler {
 public:
+
+
     struct Parser {
         Token current;
         Token previous;
@@ -20,7 +22,7 @@ public:
 
         void errorAtCurrent(const char *errMsg);
         void errorAt(Token& token, const char *errMsg);
-        void advance();
+        Token advance();
         bool match(TokenType type);
         bool peek(TokenType type) const;
         void consume(TokenType type,  const char* errMsg);
@@ -29,6 +31,7 @@ public:
 
         bool currentEqual(int num, ...) const;
         bool previousEqual(int num, ...) const;
+        void setReplacements(const std::vector<ReplaceTokens>& replacements);
     };
 
     inline Compiler(Parser& p): parser(p){}
@@ -54,6 +57,7 @@ private:
 
     Parser& parser;
     Chunk* chunk;
+    const char* source;
 
     void writeByte(byte byte1);
     void writeBytes(byte byte1, byte byte2);
@@ -70,6 +74,7 @@ private:
     void statement();
     void printStatement();
     void BStatement();
+    void RStatement();
     void ifStatement();
     void loopStatement();
 
@@ -111,6 +116,8 @@ private:
     void writeInitPart(const std::vector<ForLoopParts*>& forLoopParts, std::string l1, int forLoopNumber);
     void writeIncrementPart(const std::vector<ForLoopParts*>& forLoopParts, int forLoopNumber);
     void writeConditionPart(const std::vector<ForLoopParts*>& forLoopParts, std::string  l2, int forLoopNumber);
+
+
 public:
     bool compile(const char* source, Chunk* chunk);
     void compileExpression(Chunk* chunk);

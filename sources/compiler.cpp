@@ -212,11 +212,60 @@ void Compiler::addLabel(std::string labelName) {
     chunk->labelMap[labelName] = chunk->count();
 }
 
+void Compiler::Parser::setReplacements(const std::vector<ReplaceTokens>& replacements){
+    scanner.replacements.insert(scanner.replacements.end(), replacements.begin(), replacements.end());
+}
+#include "../headers/utility.h"
+void Compiler::RStatement() {
+
+    parser.consume(TokenType::LEFT_CURLY, "Expected '{' after R.");
+    std::vector<ReplaceTokens> replacements;
+    do {
+        Token what = parser.advance();
+        parser.consume(TokenType::MINUS_GREATER, "Expected '->' in R statement.");
+        Token with = parser.advance();
+        replacements.push_back({what, with});
+
+    }while(parser.match(TokenType::INLINE_DIVIDER));
+    parser.consume(TokenType::RIGHT_CURLY, "Expected '}' after end of R statement.");
+
+    Token l1 = parser.advance(); parser.consume(TokenType::INLINE_DIVIDER, "Expected ,.");
+    Token l2 = parser.advance();
+    if(l1.type != TokenType::IDENTIFIER || l2.type != TokenType::IDENTIFIER)
+        parser.errorAtCurrent("Expected 2 labels after R statement.");
+
+
+    Parser innerParser; Chunk innerChunk;
+    Compiler innerCompiler(innerParser);
+    innerParser.setReplacements(replacements);
+
+
+    std::string sl1 = addString(l1.start, l1.length);
+    std::string sl2 = addString(l2.start, l2.length);
+
+    size_t pos = std::string(source).find( sl1 + "...") + sl1.size() + 3;
+    if(pos == std::string::npos) {
+        parser.errorAtCurrent(format("Can't find label %s declaration", sl1.c_str()).c_str());
+        return;
+    }
+    size_t endPos = std::string(source).find( sl2 + "...", pos);
+    if(endPos == std::string::npos) {
+        parser.errorAtCurrent(format("Can't find label %s declaration", sl2.c_str()).c_str());
+        return;
+    }
+    const char* substringSource = addString(source + pos, endPos - pos );
+
+    innerCompiler.compile(substringSource, &innerChunk);
+    innerChunk.code.pop_back(); // remove return
+    write(innerChunk);
+}
+
 void Compiler::statement() {
     if(parser.previous.type == TokenType::NEW_LINE) checkLabel();
     else parser.advance(); // 'if' will advance one token no no matter if there was a label or not
 
     switch (parser.previous.type) {
+        case TokenType::R: RStatement(); break;
         case TokenType::B: BStatement(); break;
         case TokenType::BANG: writeReturn(); return;
         case TokenType::PR: ifStatement(); break;

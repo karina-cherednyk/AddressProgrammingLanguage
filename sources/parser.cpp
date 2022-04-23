@@ -57,13 +57,14 @@ bool Compiler::Parser::peek(TokenType type) const{
 }
 
 
-void Compiler::Parser::advance(){
+Token Compiler::Parser::advance(){
     previous = current;
     while(true){
         current = scanner.scanToken();
         if(current.type != TokenType::ERROR) break;
         errorAtCurrent(current.start);
     }
+    return previous;
 }
 void Compiler::Parser::consume(TokenType type, const char* errMsg){
     if(current.type == type) advance();

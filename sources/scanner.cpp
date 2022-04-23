@@ -1,11 +1,28 @@
 #include "../headers/scanner.h"
 #include "cstring"
 #include "assert.h"
+#include "../headers/utility.h"
+#undef EOF
 
+Token replace(const std::vector<ReplaceTokens>& tokens, const Token& t2){
+    for(auto& pair : tokens) {
+        Token t1 = pair.what;
+        if (t1.type != t2.type) continue;
+        if ((t1.type == TokenType::IDENTIFIER || t1.type == TokenType::NUMBER)) {
+            if (t1.length != t2.length) continue;
+            bool matching = true;
+            for (int i = 0; i < t1.length && matching; i++) {
+                if (t1.start[i] != t2.start[i]) matching = false;
+            }
+            if(matching) return pair.with;
+        }
+    }
+    return t2;
+}
 
 Scanner::Scanner(){
-    start = NULL;
-    current = NULL;
+    start = nullptr;
+    current = nullptr;
     line = -1;
 }
 
@@ -107,6 +124,8 @@ TokenType Scanner::checkKeyword(const char* with, TokenType type){
 TokenType Scanner::identifierType(){
     //TODO: check for keywords.
     switch (*start) {
+        case 'R':
+            return checkKeyword("R", TokenType::R);
         case 'B':
             return checkKeyword("B", TokenType::B);
         case 'L':
@@ -129,6 +148,11 @@ Token Scanner::identifier() {
 }
 
 Token Scanner::scanToken() {
+    Token t = scanTokenInner();
+    if(replacements.empty()) return t;
+    else return replace(replacements, t);
+}
+Token Scanner::scanTokenInner()  {
     skipWhitespaces();
     start = current;
     if(isAtEnd()) return makeToken(TokenType::EOF);
@@ -139,7 +163,10 @@ Token Scanner::scanToken() {
         case '\n': line++; return makeToken(TokenType::NEW_LINE);
         case ',':
         case ';': return makeToken(TokenType::INLINE_DIVIDER);
-        case '-': return makeToken(TokenType::MINUS);
+        case '-': {
+            if(match('>')) return makeToken(TokenType::MINUS_GREATER);
+            else return makeToken(TokenType::MINUS);
+        }
         case '+': return makeToken(TokenType::PLUS);
         case '*': return makeToken(TokenType::STAR);
         case '/': return makeToken(TokenType::SLASH);

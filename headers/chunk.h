@@ -7,10 +7,7 @@
 #include <string>
 #include <map>
 
-template <typename T>
-bool has(const std::map<std::string ,T>& map, std::string val){
-    return map.find(val) != map.end();
-}
+
 
 
 enum OpCode {

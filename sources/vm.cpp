@@ -3,6 +3,7 @@
 #include <cassert>
 #include "../headers/vm.h"
 #include "../headers/debug.h"
+#include "../headers/utility.h"
 
 void Vm::initVM() {
     stackCount = 0;

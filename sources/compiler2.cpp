@@ -14,6 +14,7 @@ void Compiler::compileConditionExpression(Chunk* chunk){
 }
 
 bool Compiler::compile(const char*source, Chunk* chunk){
+    this->source = source;
     parser.scanner.init(source);
     this->chunk = chunk;
     parser.hadError = false;
